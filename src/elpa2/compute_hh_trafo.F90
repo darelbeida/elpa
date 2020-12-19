@@ -686,22 +686,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL))
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sse_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sse_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sse_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL)) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -716,22 +703,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL))
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_neon_arch64_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_neon_arch64_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _neon_arch64_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL)) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -746,22 +720,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL))
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve128_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve128_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sve128_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL)) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -784,22 +745,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL) )
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _avx_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL)) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -813,22 +761,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL))
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx2_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx2_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _avx2_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL)) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -842,22 +777,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL))
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve256_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve256_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sve256_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL)) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -881,22 +803,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL) )
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx512_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx512_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _avx512_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL) ) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -911,22 +820,9 @@ kernel)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 
 #if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL) )
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve512_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-          call single_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve512_1hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sve512_
+#include "./complex_block1_template.F90"
 #endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL) ) */
 
 #ifndef WITH_FIXED_COMPLEX_KERNEL
@@ -946,23 +842,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK6_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sparc64_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sparc64_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sparc64_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK6_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK4_KERNEL)) */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -982,23 +864,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_neon_arch64_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_neon_arch64_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _neon_arch64_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL)) */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1015,23 +883,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve128_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve128_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sve128_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK4_KERNEL)) */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1052,23 +906,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_VSX_BLOCK6_KERNEL) && !defined(WITH_REAL_VSX_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_vsx_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_vsx_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _vsx_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_VSX_BLOCK6_KERNEL) && !defined(WITH_REAL_VSX_BLOCK4_KERNEL)) */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1088,23 +928,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SSE_BLOCK6_KERNEL) && !defined(WITH_REAL_SSE_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sse_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sse_2hv_&
-          &PRECISION &
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sse_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SSE_BLOCK6_KERNEL) && !defined(WITH_REAL_SSE_BLOCK4_KERNEL)) */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1354,24 +1180,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX_BLOCK4_KERNEL) )
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _avx_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1387,24 +1198,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX2_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX2_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx2_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx2_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _avx2_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1420,24 +1216,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve256_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve256_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sve256_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1591,24 +1372,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx512_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_avx512_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _avx512_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
 
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1627,24 +1393,9 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK4_KERNEL))
-        do j = ncols, 2, -2
-          w(:,1) = bcast_buffer(1:nbw,j+off)
-          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve512_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-          call double_hh_trafo_&
-          &MATH_DATATYPE&
-          &_sve512_2hv_&
-          &PRECISION&
-          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-        enddo
+#undef VEC_SET
+#define VEC_SET _sve512_
+#include "./real_block2_template.F90"
 #endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
 
 #ifndef WITH_FIXED_REAL_KERNEL
