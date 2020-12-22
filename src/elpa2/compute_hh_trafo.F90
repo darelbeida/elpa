@@ -472,25 +472,9 @@ kernel)
         if (kernel .eq. ELPA_2STAGE_REAL_SSE_ASSEMBLY) then
 
 #endif /* not WITH_FIXED_REAL_KERNEL */
-          do j = ncols, 2, -2
-            w(:,1) = bcast_buffer(1:nbw,j+off)
-            w(:,2) = bcast_buffer(1:nbw,j+off-1)
-#ifdef WITH_OPENMP_TRADITIONAL
-            call double_hh_trafo_&
-            &MATH_DATATYPE&
-            &_&
-            &PRECISION&
-            &_sse_assembly&
-            & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-#else
-            call double_hh_trafo_&
-            &MATH_DATATYPE&
-            &_&
-            &PRECISION&
-            &_sse_assembly&
-            & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-#endif
-          enddo
+#undef VEC_SET
+#define VEC_SET _sse_assembly_
+#include "./real_block2_template.F90"
 #ifndef WITH_FIXED_REAL_KERNEL
         endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
@@ -505,24 +489,9 @@ kernel)
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_ASSEMBLY) then
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
-          ttt = mpi_wtime()
-          do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-            call single_hh_trafo_&
-            &MATH_DATATYPE&
-            &_&
-            &PRECISION&
-            &_sse_assembly&
-            & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-            call single_hh_trafo_&
-            &MATH_DATATYPE&
-            &_&
-            &PRECISION&
-            &_sse_assembly&
-            & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#endif
-          enddo
+#undef VEC_SET
+#define VEC_SET _sse_assembly_
+#include "./complex_block1_template.F90"
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
@@ -537,32 +506,19 @@ kernel)
 
         ! sparc64 block1 complex kernel
 #if defined(WITH_COMPLEX_SPARC64_BLOCK1_KERNEL)
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!        if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1) then
-!#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL))
+!#undef VEC_SET
+!#define VEC_SET _sparc64_1hv_
+!#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL)) */
 !
-!#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL))
-!        ttt = mpi_wtime()
-!        do j = ncols, 1, -1
-!#ifdef WITH_OPENMP_TRADITIONAL
-!          call single_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_sparc64_1hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-!#else
-!          call single_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_sparc64_1hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-!#endif
-!        enddo
-!#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL)) */
-!
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1)
-!#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
 #endif /* WITH_COMPLEX_SPARC64_BLOCK1_KERNEL */
 
 #endif /* COMPLEXCASE */
@@ -572,32 +528,19 @@ kernel)
 
       ! vsx block1 complex kernel
 #if defined(WITH_COMPLEX_VSX_BLOCK1_KERNEL)
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1) then
-!#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-!
-!#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL))
-!        ttt = mpi_wtime()
-!        do j = ncols, 1, -1
-!#ifdef WITH_OPENMP_TRADITIONAL
-!          call single_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_vsx_1hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off,istripe,my_thread)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-!#else
-!          call single_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_vsx_1hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off,istripe)), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-!#endif
-!        enddo
-!#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)) */
-!
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1)
-!#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL))
+!#undef VEC_SET
+!#define VEC_SET _vsx_
+!#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
 #endif /* WITH_COMPLEX_VSX_BLOCK1_KERNEL */
 
 #endif /* COMPLEXCASE */
@@ -871,45 +814,15 @@ kernel)
       ! implementation of sparc64 block 2 complex case
 
 #if defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL)
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!      if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2) then
-!#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-!
-!        ttt = mpi_wtime()
-!        do j = ncols, 2, -2
-!          w(:,1) = bcast_buffer(1:nbw,j+off)
-!          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-!#ifdef WITH_OPENMP_TRADITIONAL
-!          call double_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_sparc64_2hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-!#else
-!          call double_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_sparc64_2hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-!#endif
-!        enddo
-!#ifdef WITH_OPENMP_TRADITIONAL
-!        if (j==1) call single_hh_trafo_&
-!        &MATH_DATATYPE&
-!        &_sparc64_1hv_&
-!        &PRECISION&
-!        & (c_loc(a(1,1+off+a_off,istripe,my_thread)), bcast_buffer(1,off+1), nbw, nl, stripe_width)
-!#else
-!        if (j==1) call single_hh_trafo_&
-!        &MATH_DATATYPE&
-!        &_sparc64_1hv_&
-!        &PRECISION&
-!        & (c_loc(a(1,1+off+a_off,istripe)), bcast_buffer(1,off+1), nbw, nl, stripe_width)
-!#endif
-!
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2)
-!#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+!#undef VEC_SET
+!#define VEC_SET _sparc64_
+!#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2)
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
 #endif /* WITH_COMPLEX_SPARC64_BLOCK2_KERNEL */
 #endif /* COMPLEXCASE == 1 */
 
@@ -918,45 +831,15 @@ kernel)
       ! implementation of vsx block 2 complex case
 
 #if defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2) then
-!#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-!
-!        ttt = mpi_wtime()
-!        do j = ncols, 2, -2
-!          w(:,1) = bcast_buffer(1:nbw,j+off)
-!          w(:,2) = bcast_buffer(1:nbw,j+off-1)
-!#ifdef WITH_OPENMP_TRADITIONAL
-!          call double_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_vsx_2hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
-!#else
-!          call double_hh_trafo_&
-!          &MATH_DATATYPE&
-!          &_vsx_2hv_&
-!          &PRECISION&
-!          & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
-!#endif
-!        enddo
-!#ifdef WITH_OPENMP_TRADITIONAL
-!        if (j==1) call single_hh_trafo_&
-!        &MATH_DATATYPE&
-!        &_vsx_1hv_&
-!        &PRECISION&
-!        & (c_loc(a(1,1+off+a_off,istripe,my_thread)), bcast_buffer(1,off+1), nbw, nl, stripe_width)
-!#else
-!        if (j==1) call single_hh_trafo_&
-!        &MATH_DATATYPE&
-!        &_vsx_1hv_&
-!        &PRECISION&
-!        & (c_loc(a(1,1+off+a_off,istripe)), bcast_buffer(1,off+1), nbw, nl, stripe_width)
-!#endif
-!
-!#ifndef WITH_FIXED_COMPLEX_KERNEL
-!      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2)
-!#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+!#undef VEC_SET
+!#define VEC_SET _vsx_
+!#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2)
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
 #endif /* WITH_COMPLEX_VSX_BLOCK2_KERNEL */
 #endif /* COMPLEXCASE == 1 */
 
