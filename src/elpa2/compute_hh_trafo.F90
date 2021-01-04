@@ -473,8 +473,10 @@ kernel)
 
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #undef VEC_SET
-#define VEC_SET _sse_assembly_
+#define VEC_SET _sse_assembly
+#define _ASSEMBLY_
 #include "./real_block2_template.F90"
+#undef _ASSEMBLY_
 #ifndef WITH_FIXED_REAL_KERNEL
         endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
@@ -490,8 +492,10 @@ kernel)
         if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_ASSEMBLY) then
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 #undef VEC_SET
-#define VEC_SET _sse_assembly_
+#define VEC_SET _sse_assembly
+#define _ASSEMBLY_
 #include "./complex_block1_template.F90"
+#undef _ASSEMBLY_
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
