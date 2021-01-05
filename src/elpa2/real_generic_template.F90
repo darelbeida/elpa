@@ -3,6 +3,13 @@
           w(:,2) = bcast_buffer(1:nbw,j+off-1)
 #ifdef WITH_OPENMP_TRADITIONAL
 
+#ifdef _BGP_
+          call double_hh_trafo&
+          &VEC_SET&
+          &PRECISION&
+          & (a(1,j+off+a_off-1,istripe,my_thread), w, nbw, nl, stripe_width, nbw)
+#else /* _BGP_ */
+
 #ifdef USE_ASSUMED_SIZE
           call double_hh_trafo_&
           &MATH_DATATYPE&
@@ -17,7 +24,17 @@
           & (a(1:stripe_width,j+off+a_off-1:j+off+a_off+nbw-1, istripe,my_thread), w(1:nbw,1:6), &
           nbw, nl, stripe_width, nbw)
 #endif
+
+#endif /* _BGP_ */
+
 #else /* WITH_OPENMP_TRADITIONAL */
+
+#ifdef _BGP_
+          call double_hh_trafo&
+          &VEC_SET&
+          &PRECISION&
+          & (a(1,j+off+a_off-1,istripe), w, nbw, nl, stripe_width, nbw)
+#else /* _BGP_ */
 
 #ifdef USE_ASSUMED_SIZE
           call double_hh_trafo_&
@@ -32,6 +49,8 @@
           &PRECISION&
           & (a(1:stripe_width,j+off+a_off-1:j+off+a_off+nbw-1,istripe),w(1:nbw,1:6), nbw, nl, stripe_width, nbw)
 #endif
+
+#endif /* _BGP_ */
 #endif /* WITH_OPENMP_TRADITIONAL */
         enddo
 
