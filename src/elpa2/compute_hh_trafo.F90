@@ -353,44 +353,9 @@ kernel)
           kernel .eq. ELPA_2STAGE_COMPLEX_BGP .or. &
           kernel .eq. ELPA_2STAGE_COMPLEX_BGQ ) then
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
-          ttt = mpi_wtime()
-          do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-#ifdef USE_ASSUMED_SIZE
-
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_&
-                 &PRECISION&
-                 & (a(1,j+off+a_off,istripe,my_thread), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_&
-                 &PRECISION&
-                 & (a(1:stripe_width,j+off+a_off:j+off+a_off+nbw-1,istripe,my_thread), &
-                 bcast_buffer(1:nbw,j+off), nbw, nl, stripe_width)
-#endif
-
-#else /* WITH_OPENMP_TRADITIONAL */
-
-#ifdef USE_ASSUMED_SIZE
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_&
-                 &PRECISION&
-                 & (a(1,j+off+a_off,istripe), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_&
-                 &PRECISION&
-                 & (a(1:stripe_width,j+off+a_off:j+off+a_off+nbw-1,istripe), bcast_buffer(1:nbw,j+off), &
-                 nbw, nl, stripe_width)
-#endif
-#endif /* WITH_OPENMP_TRADITIONAL */
-
-          enddo
+#undef VEC_SET
+#define VEC_SET _generic_
+#include "./complex_generic_template.F90"
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC .or. kernel .eq. ELPA_2STAGE_COMPLEX_BGP .or. kernel .eq. ELPA_2STAGE_COMPLEX_BGQ )
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
@@ -421,43 +386,9 @@ kernel)
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE) then
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
-          ttt = mpi_wtime()
-          do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-#ifdef USE_ASSUMED_SIZE
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_simple_&
-                 &PRECISION&
-                 & (a(1,j+off+a_off,istripe,my_thread), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_simple_&
-                 &PRECISION&
-                 & (a(1:stripe_width, j+off+a_off:j+off+a_off+nbw-1,istripe,my_thread), bcast_buffer(1:nbw,j+off), &
-                 nbw, nl, stripe_width)
-#endif
-
-#else /* WITH_OPENMP_TRADITIONAL */
-
-#ifdef USE_ASSUMED_SIZE
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_simple_&
-                 &PRECISION&
-                 & (a(1,j+off+a_off,istripe), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &_generic_simple_&
-                 &PRECISION&
-                 & (a(1:stripe_width,j+off+a_off:j+off+a_off+nbw-1,istripe), bcast_buffer(1:nbw,j+off), &
-                 nbw, nl, stripe_width)
-#endif
-
-#endif /* WITH_OPENMP_TRADITIONAL */
-          enddo
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+#include "./complex_generic_template.F90"
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */

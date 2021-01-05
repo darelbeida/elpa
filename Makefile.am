@@ -848,6 +848,7 @@ EXTRA_DIST = \
   src/elpa2/real_block4_template.F90 \
   src/elpa2/real_block6_template.F90 \
   src/elpa2/real_generic_template.F90 \
+  src/elpa2/complex_generic_template.F90 \
   src/elpa2/kernels/complex_128bit_256bit_512bit_BLOCK_template.c \
   src/elpa2/kernels/complex_template.F90 \
   src/elpa2/kernels/real_128bit_256bit_512bit_BLOCK_template.c \
