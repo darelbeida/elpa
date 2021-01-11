@@ -312,21 +312,21 @@ kernel)
     endif
 #if REALCASE == 1
 #ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_AVX_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_AVX2_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_AVX512_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_SVE512_BLOCK2 .or. &
-        kernel .eq. ELPA_2STAGE_REAL_GENERIC    .or. &
-        kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE .or. &
-        kernel .eq. ELPA_2STAGE_REAL_SSE_ASSEMBLY .or. &
-        kernel .eq. ELPA_2STAGE_REAL_BGP .or.        &
-        kernel .eq. ELPA_2STAGE_REAL_BGQ) then
+    !if (kernel .eq. ELPA_2STAGE_REAL_AVX_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_AVX2_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_AVX512_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_SVE512_BLOCK2 .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_GENERIC    .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_SSE_ASSEMBLY .or. &
+    !    kernel .eq. ELPA_2STAGE_REAL_BGP .or.        &
+    !    kernel .eq. ELPA_2STAGE_REAL_BGQ) then
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
 #endif /* REALCASE */
@@ -355,6 +355,7 @@ kernel)
       if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC .or. &
           kernel .eq. ELPA_2STAGE_COMPLEX_BGP .or. &
           kernel .eq. ELPA_2STAGE_COMPLEX_BGQ ) then
+          ! is a block1 implementation
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 #undef VEC_SET
 #define VEC_SET _generic_
@@ -388,6 +389,7 @@ kernel)
 #if defined(WITH_COMPLEX_GENERIC_SIMPLE_KERNEL)
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE) then
+          ! is a block1 implementation
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 #undef VEC_SET
 #define VEC_SET _generic_simple_
@@ -1024,7 +1026,7 @@ kernel)
 #if defined(WITH_REAL_BGQ_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
       if (kernel .eq. ELPA_2STAGE_REAL_BGQ) then
-
+        ! is a block2 implementation
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #undef VEC_SET
 #define VEC_SET _bgq_
@@ -1038,35 +1040,15 @@ kernel)
 
 #endif /* REALCASE */
 
+#if REALCASE == 1
+#ifndef WITH_FIXED_REAL_KERNEL
+    !endif !
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* REALCASE == 1 */
+
 #if COMPLEXCASE == 1
       ! complex bgp/bgq kernel implemented
 #endif
-
-
-#if REALCASE == 1
-#ifdef WITH_OPENMP_TRADITIONAL
-      if (j==1) call single_hh_trafo_&
-      &MATH_DATATYPE&
-      &_cpu_openmp_&
-      &PRECISION&
-      & (a(1:stripe_width, 1+off+a_off:1+off+a_off+nbw-1,istripe,my_thread), &
-               bcast_buffer(1:nbw,off+1), nbw, nl,stripe_width)
-#else
-      if (j==1) call single_hh_trafo_&
-      &MATH_DATATYPE&
-      &_cpu_&
-      &PRECISION&
-      & (a(1:stripe_width,1+off+a_off:1+off+a_off+nbw-1,istripe), bcast_buffer(1:nbw,off+1), nbw, nl,&
-               stripe_width)
-#endif
-
-#endif /* REALCASE == 1 */
-
-#if REALCASE == 1
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif !
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* REALCASE == 1 */
 
 #if REALCASE == 1
     ! generic simple block4 real kernel

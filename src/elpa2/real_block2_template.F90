@@ -32,3 +32,19 @@
           & (c_loc(a(1,j+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
 #endif
         enddo
+
+#ifdef WITH_OPENMP_TRADITIONAL
+        if (j==1) call single_hh_trafo_&
+        &MATH_DATATYPE&
+        &_cpu_openmp_&
+        &PRECISION&
+        & (a(1:stripe_width, 1+off+a_off:1+off+a_off+nbw-1,istripe,my_thread), &
+                 bcast_buffer(1:nbw,off+1), nbw, nl,stripe_width)
+#else
+        if (j==1) call single_hh_trafo_&
+        &MATH_DATATYPE&
+        &_cpu_&
+        &PRECISION&
+        & (a(1:stripe_width,1+off+a_off:1+off+a_off+nbw-1,istripe), bcast_buffer(1:nbw,off+1), nbw, nl,&
+                 stripe_width)
+#endif
