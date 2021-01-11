@@ -98,8 +98,8 @@ EXTRA_libelpa@SUFFIX@_private_la_DEPENDENCIES = \
   src/elpa2/elpa2_tridiag_band_template.F90 \
   src/elpa2/elpa2_trans_ev_tridi_to_band_template.F90 \
   src/elpa2/elpa2_herm_matrix_allreduce_complex_template.F90 \
-  src/elpa2/kernels/real_template.F90 \
-  src/elpa2/kernels/complex_template.F90 \
+  src/elpa2/kernels/real_generic_template.F90 \
+  src/elpa2/kernels/complex_generic_template.F90 \
   src/elpa2/kernels/simple_template.F90 \
   src/elpa2/kernels/simple_block4_template.F90 \
   src/elpa2/kernels/simple_block6_template.F90 \
@@ -153,11 +153,11 @@ if HAVE_HETEROGENOUS_CLUSTER_SUPPORT
 endif
 
 if WITH_REAL_GENERIC_KERNEL
-  libelpa@SUFFIX@_private_la_SOURCES +=  src/elpa2/kernels/real.F90
+  libelpa@SUFFIX@_private_la_SOURCES +=  src/elpa2/kernels/real_generic.F90
 endif
 
 if WITH_COMPLEX_GENERIC_KERNEL
-  libelpa@SUFFIX@_private_la_SOURCES +=  src/elpa2/kernels/complex.F90
+  libelpa@SUFFIX@_private_la_SOURCES +=  src/elpa2/kernels/complex_generic.F90
 endif
 
 if WITH_REAL_GENERIC_SIMPLE_KERNEL
@@ -856,9 +856,9 @@ EXTRA_DIST = \
   src/elpa2/real_generic_template.F90 \
   src/elpa2/complex_generic_template.F90 \
   src/elpa2/kernels/complex_128bit_256bit_512bit_BLOCK_template.c \
-  src/elpa2/kernels/complex_template.F90 \
+  src/elpa2/kernels/complex_generic_template.F90 \
   src/elpa2/kernels/real_128bit_256bit_512bit_BLOCK_template.c \
-  src/elpa2/kernels/real_template.F90 \
+  src/elpa2/kernels/real_generic_template.F90 \
   src/elpa2/kernels/simple_template.F90 \
   src/elpa2/kernels/simple_block4_template.F90 \
   src/elpa2/kernels/simple_block6_template.F90 \

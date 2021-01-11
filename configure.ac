@@ -764,6 +764,7 @@ m4_pattern_forbid([elpa_m4])
 m4_define(elpa_m4_generic_kernels, [
         real_generic
         real_generic_simple
+        real_generic_simple_block1
         real_generic_simple_block4
         real_generic_simple_block6
         real_generic_simple_block8

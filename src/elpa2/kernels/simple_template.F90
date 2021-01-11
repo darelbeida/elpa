@@ -58,7 +58,6 @@
 ! --------------------------------------------------------------------------------------------------
 #endif
 
-#if COMPLEXCASE==1
   ! the intel compiler creates a temp copy of array q
   ! this should be avoided without using assumed size arrays
 
@@ -73,6 +72,17 @@
     implicit none
     !class(elpa_abstract_impl_t), intent(inout) :: obj
     integer(kind=ik), intent(in)    :: nb, nq, ldq
+#if REALCASE == 1
+#ifdef USE_ASSUMED_SIZE
+    real(kind=C_DATATYPE_KIND), intent(inout) :: q(ldq,*)
+    real(kind=C_DATATYPE_KIND), intent(in)    :: hh(*)
+#else
+    real(kind=C_DATATYPE_KIND), intent(inout) :: q(1:ldq,1:nb)
+    real(kind=C_DATATYPE_KIND), intent(in)    :: hh(1:nb)
+#endif
+    real(kind=C_DATATYPE_KIND)                :: tau1, x(nq)
+#endif /* COMPLEXCASE == 1 */
+#if COMPLEXCASE == 1
 #ifdef USE_ASSUMED_SIZE
     complex(kind=C_DATATYPE_KIND), intent(inout) :: q(ldq,*)
     complex(kind=C_DATATYPE_KIND), intent(in)    :: hh(*)
@@ -80,8 +90,9 @@
     complex(kind=C_DATATYPE_KIND), intent(inout) :: q(1:ldq,1:nb)
     complex(kind=C_DATATYPE_KIND), intent(in)    :: hh(1:nb)
 #endif
-    integer(kind=ik)                :: i
     complex(kind=C_DATATYPE_KIND)                :: tau1, x(nq)
+#endif /* COMPLEXCASE == 1 */
+    integer(kind=ik)                :: i
 
     !call obj%timer%start("kernel_&
     !&MATH_DATATYPE&
@@ -96,7 +107,12 @@
     x(1:nq) = q(1:nq,1)
 
     do i=2,nb
+#if REALCASE == 1
+       x(1:nq) = x(1:nq) + q(1:nq,i)*hh(i)
+#endif
+#if COMPLEXCASE == 1
        x(1:nq) = x(1:nq) + q(1:nq,i)*conjg(hh(i))
+#endif
     enddo
 
     tau1 = hh(1)
@@ -119,7 +135,6 @@
 
   end subroutine
 
-#endif /* COMPLEXCASE == 1 */
   ! --------------------------------------------------------------------------------------------------
 
   subroutine double_hh_trafo_&

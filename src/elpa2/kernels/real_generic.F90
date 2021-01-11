@@ -75,7 +75,7 @@ module real_generic_kernel
 #define REALCASE 1
 #define DOUBLE_PRECISION 1
 #include "../../general/precision_macros.h"
-#include "real_template.F90"
+#include "real_generic_template.F90"
 #undef REALCASE
 #undef DOUBLE_PRECISION
 
@@ -83,7 +83,7 @@ module real_generic_kernel
 #define REALCASE 1
 #define SINGLE_PRECISION 1
 #include "../../general/precision_macros.h"
-#include "real_template.F90"
+#include "real_generic_template.F90"
 #undef REALCASE
 #undef SINGLE_PRECISION
 #endif

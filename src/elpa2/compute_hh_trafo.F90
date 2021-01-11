@@ -368,6 +368,58 @@ kernel)
 #endif /* COMPLEXCASE */
 
 #if REALCASE == 1
+        ! generic simple block1 real kernel
+#if defined(WITH_REAL_GENERIC_SIMPLE_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+        if (kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE_BLOCK1) then
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+!#include "./real_generic_template.F90"
+        ttt = mpi_wtime()
+        do j = ncols, 1, -1
+#ifdef WITH_OPENMP_TRADITIONAL
+#ifdef USE_ASSUMED_SIZE
+
+            call single_hh_trafo_&
+                 &MATH_DATATYPE&
+                 &VEC_SET&
+                 &PRECISION&
+                 & (a(1,j+off+a_off,istripe,my_thread), bcast_buffer(1,j+off),nbw,nl,stripe_width)
+#else
+            call single_hh_trafo_&
+                 &MATH_DATATYPE&
+                 &VEC_SET&
+                 &PRECISION&
+                 & (a(1:stripe_width,j+off+a_off:j+off+a_off+nbw-1,istripe,my_thread), &
+                 bcast_buffer(1:nbw,j+off), nbw, nl, stripe_width)
+#endif
+
+#else /* WITH_OPENMP_TRADITIONAL */
+
+#ifdef USE_ASSUMED_SIZE
+            call single_hh_trafo_&
+                 &MATH_DATATYPE&
+                 &VEC_SET&
+                 &PRECISION&
+                 & (a(1,j+off+a_off,istripe), bcast_buffer(1,j+off),nbw,nl,stripe_width)
+#else
+            call single_hh_trafo_&
+                 &MATH_DATATYPE&
+                 &VEC_SET&
+                 &PRECISION&
+                 & (a(1:stripe_width,j+off+a_off:j+off+a_off+nbw-1,istripe), bcast_buffer(1:nbw,j+off), &
+                 nbw, nl, stripe_width)
+#endif
+#endif /* WITH_OPENMP_TRADITIONAL */
+        enddo
+#ifndef WITH_FIXED_REAL_KERNEL
+        endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_GENERIC_SIMPLE_KERNEL */
+
+#endif /* REALCASE */
+#if REALCASE == 1
         ! generic simple real kernel
 #if defined(WITH_REAL_GENERIC_SIMPLE_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
