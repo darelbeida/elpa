@@ -1,0 +1,183 @@
+      ! X86 INTRINSIC CODE, USING 6 HOUSEHOLDER VECTORS
+      do j = ncols, 8, -8
+        w(:,1) = bcast_buffer(1:nbw,j+off)
+        w(:,2) = bcast_buffer(1:nbw,j+off-1)
+        w(:,3) = bcast_buffer(1:nbw,j+off-2)
+        w(:,4) = bcast_buffer(1:nbw,j+off-3)
+        w(:,5) = bcast_buffer(1:nbw,j+off-4)
+        w(:,6) = bcast_buffer(1:nbw,j+off-5)
+        w(:,7) = bcast_buffer(1:nbw,j+off-6)
+        w(:,8) = bcast_buffer(1:nbw,j+off-7)
+#ifdef WITH_OPENMP_TRADITIONAL
+        call octo_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+        &8hv_&
+        &PRECISION&
+#ifdef _FORTRAN_
+!#ifdef USE_ASSUMED_SIZE
+        & (a(1,j+off+a_off-7,istripe,my_thread), w, nbw, nl, stripe_width, nbw)
+!#else
+!        & (a(1:stripe_width,j+off+a_off-7:j+off+a_off-1,istripe,my_thread), w(1:nbw,1:7), &
+!           nbw, nl, stripe_width, nbw)
+!#endif
+#else /* _FORTRAN_ */
+        & (c_loc(a(1,j+off+a_off-7,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#else /* WITH_OPENMP_TRADITIONAL */
+        call octo_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+        &8hv_&
+        &PRECISION&
+#ifdef _FORTRAN_
+!#ifdef USE_ASSUMED_SIZE
+        & (a(1,j+off+a_off-7,istripe), w, nbw, nl, stripe_width, nbw)
+!#else
+!        & (a(1:stripe_width,j+off+a_off-7:j+off+a_off+nbw-1,istripe), w(1:nbw,1:7), &
+!           nbw, nl, stripe_width, nbw)
+!#endif
+#else /* _FORTRAN_ */
+        & (c_loc(a(1,j+off+a_off-7,istripe)), w, nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#endif /* WITH_OPENMP_TRADITIONAL */
+      enddo
+      do jj = j, 6, -6
+        w(:,1) = bcast_buffer(1:nbw,j+off)
+        w(:,2) = bcast_buffer(1:nbw,j+off-1)
+        w(:,3) = bcast_buffer(1:nbw,j+off-2)
+        w(:,4) = bcast_buffer(1:nbw,j+off-3)
+        w(:,5) = bcast_buffer(1:nbw,j+off-4)
+        w(:,6) = bcast_buffer(1:nbw,j+off-5)
+#ifdef WITH_OPENMP_TRADITIONAL
+        call hexa_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+        &6hv_&
+        &PRECISION&
+#ifdef _FORTRAN_
+!#ifdef USE_ASSUMED_SIZE
+        & (a(1,jj+off+a_off-5,istripe,my_thread), w, nbw, nl, stripe_width, nbw)
+!#else
+!        & (a(1:stripe_width,jj+off+a_off-5:jj+off+a_off-1,istripe,my_thread), w(1:nbw,1:6), &
+!           nbw, nl, stripe_width, nbw)
+!#endif
+#else /* _FORTRAN_ */
+        & (c_loc(a(1,jj+off+a_off-5,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#else /* WITH_OPENMP_TRADITIONAL */
+        call hexa_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+        &6hv_&
+        &PRECISION&
+#ifdef _FORTRAN_
+!#ifdef USE_ASSUMED_SIZE
+        & (a(1,jj+off+a_off-5,istripe), w, nbw, nl, stripe_width, nbw)
+!#else
+!        & (a(1:stripe_width,jj+off+a_off-5:jj+off+a_off+nbw-1,istripe), w(1:nbw,1:6), &
+!           nbw, nl, stripe_width, nbw)
+!#endif
+#else /* _FORTRAN_ */
+        & (c_loc(a(1,jj+off+a_off-5,istripe)), w, nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#endif /* WITH_OPENMP_TRADITIONAL */
+
+      enddo
+      do jjj = jj, 4, -4
+        w(:,1) = bcast_buffer(1:nbw,jjj+off)
+        w(:,2) = bcast_buffer(1:nbw,jjj+off-1)
+        w(:,3) = bcast_buffer(1:nbw,jjj+off-2)
+        w(:,4) = bcast_buffer(1:nbw,jjj+off-3)
+#ifdef WITH_OPENMP_TRADITIONAL
+        call quad_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+        &4hv_&
+        &PRECISION&
+#ifdef _FORTRAN_
+#ifdef USE_ASSUMED_SIZE
+        & (a(1,jjj+off+a_off-3,istripe,my_thread), w, nbw, nl, stripe_width, nbw)
+#else
+        & (a(1:stripe_width,jjj+off+a_off-3:jj+off+a_off+nbw-1,istripe,my_thread), &
+           w(1:nbw,1:4), nbw, nl, stripe_width, nbw)
+#endif
+#else /* _FORTRAN_ */
+        & (c_loc(a(1,jjj+off+a_off-3,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#else /* WITH_OPENMP_TRADITIONAL */
+        call quad_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+        &4hv_&
+        &PRECISION&
+#ifdef _FORTRAN_
+#ifdef USE_ASSUMED_SIZE
+        & (a(1,jjj+off+a_off-3,istripe), w, &
+                                      nbw, nl, stripe_width, nbw)
+#else
+        & (a(1:stripe_width,jjj+off+a_off-3:jjj+off+a_off+nbw-1,istripe), &
+           w(1:nbw,1:4), nbw, nl, stripe_width, nbw)
+#endif
+#else /* _FORTRAN _ */
+        & (c_loc(a(1,jjj+off+a_off-3,istripe)), w, &
+                                                  nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#endif /* WITH_OPENMP_TRADITIONAL */
+      enddo
+      do jjjj = jjj, 2, -2
+        w(:,1) = bcast_buffer(1:nbw,jjjj+off)
+        w(:,2) = bcast_buffer(1:nbw,jjjj+off-1)
+#ifdef WITH_OPENMP_TRADITIONAL
+        call double_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+#ifndef _FORTRAN_
+        &2hv_&
+#endif
+        &PRECISION&
+#ifdef _FORTRAN_
+#ifdef USE_ASSUMED_SIZE
+        & (a(1,jjjj+off+a_off-1,istripe,my_thread), w, nbw, nl, stripe_width, nbw)
+#else
+        & (a(1:stripe_width,jjjj+off+a_off-1:jjjj+off+a_off-1+nbw,istripe,my_thread), w(1:nbw,1:6), nbw, &
+           nl, stripe_width, nbw)
+#endif
+#else /* _FORTRAN_ */
+        & (c_loc(a(1,jjjj+off+a_off-1,istripe,my_thread)), w, nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#else /* WITH_OPENMP_TRADITIONAL */
+        call double_hh_trafo_&
+        &MATH_DATATYPE&
+        &VEC_SET&
+#ifndef _FORTRAN_
+        &2hv_&
+#endif
+        &PRECISION&
+#ifdef _FORTRAN_
+#ifdef USE_ASSUMED_SIZE
+        & (a(1,jjjj+off+a_off-1,istripe), w, nbw, nl, stripe_width, nbw)
+#else
+        & (a(1:stripe_width,jjjj+off+a_off-1:jjjj+off+a_off-1+nbw,istripe), w(1:nbw,1:6), nbw, nl, &
+           stripe_width, nbw)
+#endif
+#else /* _FORTRAN_ */
+        & (c_loc(a(1,jjjj+off+a_off-1,istripe)), w, nbw, nl, stripe_width, nbw)
+#endif /* _FORTRAN_ */
+#endif /* WITH_OPENMP_TRADITIONAL */
+      enddo
+#ifdef WITH_OPENMP_TRADITIONAL
+      if (jjjj==1) call single_hh_trafo_&
+      &MATH_DATATYPE&
+      &_cpu_openmp_&
+      &PRECISION&
+      & (a(1:stripe_width,1+off+a_off:1+off+a_off+nbw-1, istripe,my_thread), &
+                                bcast_buffer(1:nbw,off+1), nbw, nl, stripe_width)
+#else
+      if (jjjj==1) call single_hh_trafo_&
+      &MATH_DATATYPE&
+      &_cpu_&
+      &PRECISION&
+      & (a(1:stripe_width,1+off+a_off:1+off+a_off+nbw-1,istripe), bcast_buffer(1:nbw,off+1), nbw, nl, stripe_width)
+#endif
+

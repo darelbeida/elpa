@@ -167,9 +167,9 @@ kernel)
 #ifdef WITH_OPENMP_TRADITIONAL
   integer(kind=ik)                           :: my_thread, noff
 #endif
-  integer(kind=ik)                           :: j, nl, jj, jjj, n_times
+  integer(kind=ik)                           :: j, nl, jj, jjj, jjjj, n_times
 #if REALCASE == 1
-  real(kind=C_DATATYPE_KIND)                 :: w(nbw,6)
+  real(kind=C_DATATYPE_KIND)                 :: w(nbw,8)
 #endif
 #if COMPLEXCASE == 1
   complex(kind=C_DATATYPE_KIND)              :: w(nbw,2)
@@ -1108,6 +1108,25 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_GENERIC_SIMPLE_BLOCK6_KERNEL */
+
+#endif /* REALCASE */
+
+#if REALCASE == 1
+    !real generic simple block8 kernel
+#if defined(WITH_REAL_GENERIC_SIMPLE_BLOCK8_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE_BLOCK8) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+#define _FORTRAN_
+#include "./real_block8_template.F90"
+#undef _FORTRAN_
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_GENERIC_SIMPLE_BLOCK8_KERNEL */
 
 #endif /* REALCASE */
 

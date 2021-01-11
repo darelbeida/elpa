@@ -96,7 +96,7 @@
 #ifdef USE_ASSUMED_SIZE
         & (a(1,jjj+off+a_off-1,istripe,my_thread), w, nbw, nl, stripe_width, nbw)
 #else
-        & (a(1:stripe_width,jj+off+a_off-1:jj+off+a_off-1+nbw,istripe,my_thread), w(1:nbw,1:6), nbw, &
+        & (a(1:stripe_width,jjj+off+a_off-1:jjj+off+a_off-1+nbw,istripe,my_thread), w(1:nbw,1:6), nbw, &
            nl, stripe_width, nbw)
 #endif
 #else /* _FORTRAN_ */
@@ -114,7 +114,7 @@
 #ifdef USE_ASSUMED_SIZE
         & (a(1,jjj+off+a_off-1,istripe), w, nbw, nl, stripe_width, nbw)
 #else
-        & (a(1:stripe_width,jj+off+a_off-1:jj+off+a_off-1+nbw,istripe), w(1:nbw,1:6), nbw, nl, &
+        & (a(1:stripe_width,jjj+off+a_off-1:jjj+off+a_off-1+nbw,istripe), w(1:nbw,1:6), nbw, nl, &
            stripe_width, nbw)
 #endif
 #else /* _FORTRAN_ */
