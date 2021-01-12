@@ -770,7 +770,12 @@ m4_define(elpa_m4_generic_kernels, [
         real_generic_simple_block8
         complex_generic
         complex_generic_simple
+        complex_generic_simple_block2
 ])
+# complex_generic_simple_block2
+# complex_generic_simple_block4
+# complex_generic_simple_block6
+# complex_generic_simple_block8
 
 m4_define(elpa_m4_sse_assembly_kernels, [
         real_sse_assembly

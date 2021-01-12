@@ -63,8 +63,10 @@ module complex_generic_simple_kernel
 
   private
   public single_hh_trafo_complex_generic_simple_double
+  public double_hh_trafo_complex_generic_simple_double
 #ifdef WANT_SINGLE_PRECISION_COMPLEX
   public single_hh_trafo_complex_generic_simple_single
+  public double_hh_trafo_complex_generic_simple_single
 #endif
 
   contains

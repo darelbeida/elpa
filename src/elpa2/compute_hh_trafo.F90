@@ -46,6 +46,7 @@
 ! todo: - kernels with blocking larger than 6 / 2
 !       - generic_simple complex blocking
 !       - single_compute
+!       - consistent rename of kernels
 subroutine compute_hh_trafo_&
 &MATH_DATATYPE&
 #ifdef WITH_OPENMP_TRADITIONAL
@@ -375,44 +376,8 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #undef VEC_SET
 #define VEC_SET _generic_simple_
-!#include "./real_generic_template.F90"
-        ttt = mpi_wtime()
-        do j = ncols, 1, -1
-#ifdef WITH_OPENMP_TRADITIONAL
-#ifdef USE_ASSUMED_SIZE
-
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &VEC_SET&
-                 &PRECISION&
-                 & (a(1,j+off+a_off,istripe,my_thread), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &VEC_SET&
-                 &PRECISION&
-                 & (a(1:stripe_width,j+off+a_off:j+off+a_off+nbw-1,istripe,my_thread), &
-                 bcast_buffer(1:nbw,j+off), nbw, nl, stripe_width)
-#endif
-
-#else /* WITH_OPENMP_TRADITIONAL */
-
-#ifdef USE_ASSUMED_SIZE
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &VEC_SET&
-                 &PRECISION&
-                 & (a(1,j+off+a_off,istripe), bcast_buffer(1,j+off),nbw,nl,stripe_width)
-#else
-            call single_hh_trafo_&
-                 &MATH_DATATYPE&
-                 &VEC_SET&
-                 &PRECISION&
-                 & (a(1:stripe_width,j+off+a_off:j+off+a_off+nbw-1,istripe), bcast_buffer(1:nbw,j+off), &
-                 nbw, nl, stripe_width)
-#endif
-#endif /* WITH_OPENMP_TRADITIONAL */
-        enddo
+! same code as real
+#include "./complex_generic_template.F90"
 #ifndef WITH_FIXED_REAL_KERNEL
         endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
@@ -437,7 +402,6 @@ kernel)
 
 #if COMPLEXCASE == 1
         ! generic simple complex case
-
 #if defined(WITH_COMPLEX_GENERIC_SIMPLE_KERNEL)
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE) then
@@ -448,6 +412,19 @@ kernel)
 #include "./complex_generic_template.F90"
 #ifndef WITH_FIXED_COMPLEX_KERNEL
         endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_GENERIC_SIMPLE_KERNEL */
+
+#if defined(WITH_COMPLEX_GENERIC_SIMPLE_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE_BLOCK2) then
+          ! is a block1 implementation
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+#include "./real_generic_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE_BLOCK2)
 #endif /* not WITH_FIXED_COMPLEX_KERNEL */
 #endif /* WITH_COMPLEX_GENERIC_SIMPLE_KERNEL */
 
