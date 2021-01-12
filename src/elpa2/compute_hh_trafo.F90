@@ -173,7 +173,7 @@ kernel)
   real(kind=C_DATATYPE_KIND)                 :: w(nbw,8)
 #endif
 #if COMPLEXCASE == 1
-  complex(kind=C_DATATYPE_KIND)              :: w(nbw,2)
+  complex(kind=C_DATATYPE_KIND)              :: w(nbw,4)
 #endif
   real(kind=c_double)                        :: ttt ! MPI_WTIME always needs double
 
@@ -311,730 +311,10 @@ kernel)
     if (wantDebug) then
       call obj%timer%start("compute_hh_trafo: CPU")
     endif
-#if REALCASE == 1
-#ifndef WITH_FIXED_REAL_KERNEL
-    !if (kernel .eq. ELPA_2STAGE_REAL_AVX_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_AVX2_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_AVX512_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_SVE512_BLOCK2 .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_GENERIC    .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_SSE_ASSEMBLY .or. &
-    !    kernel .eq. ELPA_2STAGE_REAL_BGP .or.        &
-    !    kernel .eq. ELPA_2STAGE_REAL_BGQ) then
-#endif /* not WITH_FIXED_REAL_KERNEL */
 
-#endif /* REALCASE */
-
-      !FORTRAN CODE / X86 INRINISIC CODE / BG ASSEMBLER USING 2 HOUSEHOLDER VECTORS
-#if REALCASE == 1
-      ! generic kernel real case
-#if defined(WITH_REAL_GENERIC_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-      if (kernel .eq. ELPA_2STAGE_REAL_GENERIC) then
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _generic_
-#include "./real_generic_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_GENERIC_KERNEL */
-
-#endif /* REALCASE == 1 */
-
-#if COMPLEXCASE == 1
-      ! generic kernel complex case
-#if defined(WITH_COMPLEX_GENERIC_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC .or. &
-          kernel .eq. ELPA_2STAGE_COMPLEX_BGP .or. &
-          kernel .eq. ELPA_2STAGE_COMPLEX_BGQ ) then
-          ! is a block1 implementation
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _generic_
-#include "./complex_generic_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC .or. kernel .eq. ELPA_2STAGE_COMPLEX_BGP .or. kernel .eq. ELPA_2STAGE_COMPLEX_BGQ )
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_GENERIC_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-#if REALCASE == 1
-        ! generic simple block1 real kernel
-#if defined(WITH_REAL_GENERIC_SIMPLE_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-        if (kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE_BLOCK1) then
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _generic_simple_
-! same code as real
-#include "./complex_generic_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-        endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_GENERIC_SIMPLE_KERNEL */
-
-#endif /* REALCASE */
-#if REALCASE == 1
-        ! generic simple real kernel
-#if defined(WITH_REAL_GENERIC_SIMPLE_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-        if (kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE) then
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _generic_simple_
-#include "./real_generic_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-        endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_GENERIC_SIMPLE_KERNEL */
-
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-        ! generic simple complex case
-#if defined(WITH_COMPLEX_GENERIC_SIMPLE_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE) then
-          ! is a block1 implementation
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _generic_simple_
-#include "./complex_generic_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_GENERIC_SIMPLE_KERNEL */
-
-#if defined(WITH_COMPLEX_GENERIC_SIMPLE_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE_BLOCK2) then
-          ! is a block1 implementation
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _generic_simple_
-#include "./real_generic_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE_BLOCK2)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_GENERIC_SIMPLE_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-#if REALCASE == 1
-        ! sse assembly kernel real case
-#if defined(WITH_REAL_SSE_ASSEMBLY_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-        if (kernel .eq. ELPA_2STAGE_REAL_SSE_ASSEMBLY) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sse_assembly
-#define _ASSEMBLY_
-#include "./real_block2_template.F90"
-#undef _ASSEMBLY_
-#ifndef WITH_FIXED_REAL_KERNEL
-        endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SSE_ASSEMBLY_KERNEL */
-
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-
-        ! sse assembly kernel complex case
-#if defined(WITH_COMPLEX_SSE_ASSEMBLY_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_ASSEMBLY) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sse_assembly
-#define _ASSEMBLY_
-#include "./complex_block1_template.F90"
-#undef _ASSEMBLY_
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SSE_ASSEMBLY_KERNEL */
-#endif /* COMPLEXCASE */
-
-#if REALCASE == 1
-        ! no sse, vsx, sparc64 sve block1 real kernel
-#endif
-
-#if COMPLEXCASE == 1
-
-        ! sparc64 block1 complex kernel
-#if defined(WITH_COMPLEX_SPARC64_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-        if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL))
-!#undef VEC_SET
-!#define VEC_SET _sparc64_1hv_
-!#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL)) */
-!
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SPARC64_BLOCK1_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-
-#if COMPLEXCASE == 1
-
-      ! vsx block1 complex kernel
-#if defined(WITH_COMPLEX_VSX_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL))
-!#undef VEC_SET
-!#define VEC_SET _vsx_
-!#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_VSX_BLOCK1_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-
-#if COMPLEXCASE == 1
-
-      ! sse block1 complex kernel
-#if defined(WITH_COMPLEX_SSE_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK1) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sse_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL)) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK1)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SSE_BLOCK1_KERNEL */
-
-      ! neon_arch64 block1 complex kernel
-#if defined(WITH_COMPLEX_NEON_ARCH64_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK1) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL))
-#undef VEC_SET
-#define VEC_SET _neon_arch64_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL)) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK1)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_NEON_ARCH64_BLOCK1_KERNEL */
-
-      ! sve128 block1 complex kernel
-#if defined(WITH_COMPLEX_SVE128_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK1) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sve128_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL)) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK1)
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SVE128_BLOCK1_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-#if REALCASE == 1
-      !no avx block1 real kernel
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-
-      ! avx block1 complex kernel
-#if defined(WITH_COMPLEX_AVX_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK1)) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL) )
-#undef VEC_SET
-#define VEC_SET _avx_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL)) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK1) )
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_AVX_BLOCK1_KERNEL */
-
-#if defined(WITH_COMPLEX_AVX2_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK1)) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL))
-#undef VEC_SET
-#define VEC_SET _avx2_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL)) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK1))
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_AVX2_BLOCK1_KERNEL */
-
-#if defined(WITH_COMPLEX_SVE256_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK1)) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sve256_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL)) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK1))
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SVE256_BLOCK1_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-#if REALCASE == 1
-      ! no avx512 block1 real kernel
-      ! no sve512 block1 real kernel
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-
-      ! avx512 block1 complex kernel
-#if defined(WITH_COMPLEX_AVX512_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK1)) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL) )
-#undef VEC_SET
-#define VEC_SET _avx512_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL) ) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK1))
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_AVX512_BLOCK1_KERNEL  */
-
-      ! sve512 block1 complex kernel
-#if defined(WITH_COMPLEX_SVE512_BLOCK1_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK1)) then
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-
-#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL) )
-#undef VEC_SET
-#define VEC_SET _sve512_
-#include "./complex_block1_template.F90"
-#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL) ) */
-
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK1))
-#endif /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SVE512_BLOCK1_KERNEL  */
-
-#endif /* COMPLEXCASE */
-
-#if REALCASE == 1
-      ! implementation of sparc64 block 2 real case
-#if defined(WITH_REAL_SPARC64_BLOCK2_KERNEL)
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      if (kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK2) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK6_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sparc64_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK6_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK4_KERNEL)) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SPARC64_BLOCK2_KERNEL */
-
-#endif /* REALCASE == 1 */
-
-#if REALCASE == 1
-      ! implementation of neon_arch64 block 2 real case
-#if defined(WITH_REAL_NEON_ARCH64_BLOCK2_KERNEL)
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      if (kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK2) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _neon_arch64_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL)) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_NEON_ARCH64_BLOCK2_KERNEL */
-
-      ! implementation of neon_arch64 block 2 real case
-#if defined(WITH_REAL_SVE128_BLOCK2_KERNEL)
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      if (kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK2) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sve128_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK4_KERNEL)) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE128_BLOCK2_KERNEL */
-
-#endif /* REALCASE == 1 */
-
-
-#if REALCASE == 1
-      ! implementation of vsx block 2 real case
-#if defined(WITH_REAL_VSX_BLOCK2_KERNEL)
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      if (kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK2) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_VSX_BLOCK6_KERNEL) && !defined(WITH_REAL_VSX_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _vsx_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_VSX_BLOCK6_KERNEL) && !defined(WITH_REAL_VSX_BLOCK4_KERNEL)) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_VSX_BLOCK2_KERNEL */
-
-#endif /* REALCASE == 1 */
-
-#if REALCASE == 1
-      ! implementation of sse block 2 real case
-#if defined(WITH_REAL_SSE_BLOCK2_KERNEL)
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      if (kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK2) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SSE_BLOCK6_KERNEL) && !defined(WITH_REAL_SSE_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sse_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SSE_BLOCK6_KERNEL) && !defined(WITH_REAL_SSE_BLOCK4_KERNEL)) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SSE_BLOCK2_KERNEL */
-
-#endif /* REALCASE == 1 */
-
-
-#if COMPLEXCASE == 1
-      ! implementation of sparc64 block 2 complex case
-
-#if defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-!#undef VEC_SET
-!#define VEC_SET _sparc64_
-!#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2)
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SPARC64_BLOCK2_KERNEL */
-#endif /* COMPLEXCASE == 1 */
-
-
-#if COMPLEXCASE == 1
-      ! implementation of vsx block 2 complex case
-
-#if defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-!#undef VEC_SET
-!#define VEC_SET _vsx_
-!#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2)
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_VSX_BLOCK2_KERNEL */
-#endif /* COMPLEXCASE == 1 */
-
-#if COMPLEXCASE == 1
-      ! implementation of sse block 2 complex case
-
-#if defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK2) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sse_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK2)
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SSE_BLOCK2_KERNEL */
-
-      ! implementation of neon_arch64 block 2 complex case
-
-#if defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK2) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _neon_arch64_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK2)
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL */
-
-      ! implementation of sve128 block 2 complex case
-
-#if defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK2) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sve128_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK2)
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SVE128_BLOCK2_KERNEL */
-
-#endif /* COMPLEXCASE == 1 */
-
-#if REALCASE == 1
-      ! implementation of avx block 2 real case
-
-#if defined(WITH_REAL_AVX_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-
-      if ((kernel .eq. ELPA_2STAGE_REAL_AVX_BLOCK2))  then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX_BLOCK4_KERNEL) )
-#undef VEC_SET
-#define VEC_SET _avx_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_AVX_BLOCK2_KERNEL */
-
-#if defined(WITH_REAL_AVX2_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-
-      if ((kernel .eq. ELPA_2STAGE_REAL_AVX2_BLOCK2))  then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX2_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX2_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _avx2_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_AVX2_BLOCK2_KERNEL */
-
-#if defined(WITH_REAL_SVE256_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-
-      if ((kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK2))  then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sve256_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE256_BLOCK2_KERNEL */
-
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-
-      ! implementation of avx block 2 complex case
-#if defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK2) ) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _avx_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK2) )
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_AVX_BLOCK2_KERNEL */
-
-      ! implementation of avx2 block 2 complex case
-#if defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK2) ) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _avx2_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK2) )
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /*  WITH_COMPLEX_AVX2_BLOCK2_KERNEL */
-
-      ! implementation of sve256 block 2 complex case
-#if defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK2) ) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sve256_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK2) )
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /*  WITH_COMPLEX_SVE256_BLOCK2_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-#if REALCASE == 1
-      ! implementation of avx512 block 2 real case
-
-#if defined(WITH_REAL_AVX512_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-
-      if ((kernel .eq. ELPA_2STAGE_REAL_AVX512_BLOCK2)) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _avx512_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_AVX512_BLOCK2_KERNEL */
-
-
-! implementation of sve512 block 2 real case
-
-#if defined(WITH_REAL_SVE512_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-
-      if ((kernel .eq. ELPA_2STAGE_REAL_SVE512_BLOCK2)) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK4_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sve512_
-#include "./real_block2_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-      endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE512_BLOCK2_KERNEL */
-
-
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-
-! implementation of avx512 block 2 complex case
-#if defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK2)) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _avx512_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK2))
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_AVX512_BLOCK2_KERNEL */
-
-! implementation of vse512 block 2 complex case
-#if defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL)
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK2)) then
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sve512_
-#include "./complex_block2_template.F90"
-#ifndef WITH_FIXED_COMPLEX_KERNEL
-      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK2))
-#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
-#endif /* WITH_COMPLEX_SVE512_BLOCK2_KERNEL */
-
-#endif /* COMPLEXCASE */
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! BGP kernels, real: block2, complex block1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
 
 #if defined(WITH_REAL_BGP_KERNEL)
@@ -1052,6 +332,27 @@ kernel)
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_BGP_KERNEL */
 
+#endif /* REALCASE == 1 */
+#if COMPLEXCASE == 1
+#if defined(WITH_COMPLEX_GENERIC_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_BGP) then
+          ! is a block1 implementation
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_
+#include "./complex_generic_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_BGP)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_GENERIC_KERNEL */
+
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! BGQ kernels, real: block2, complex block1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
 #if defined(WITH_REAL_BGQ_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
       if (kernel .eq. ELPA_2STAGE_REAL_BGQ) then
@@ -1066,19 +367,130 @@ kernel)
       endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_BGQ_KERNEL */
-
 #endif /* REALCASE */
 
+#if COMPLEXCASE == 1
+      ! generic kernel complex case
+#if defined(WITH_COMPLEX_GENERIC_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_BGQ ) then
+          ! is a block1 implementation
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_
+#include "./complex_generic_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_BGQ )
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_GENERIC_KERNEL */
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GENERIC kernels, real: block2, complex block1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 #if REALCASE == 1
+      ! generic kernel real case
+#if defined(WITH_REAL_GENERIC_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
-    !endif !
+      if (kernel .eq. ELPA_2STAGE_REAL_GENERIC) then
 #endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_
+#include "./real_generic_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_GENERIC_KERNEL */
 #endif /* REALCASE == 1 */
 
 #if COMPLEXCASE == 1
-      ! complex bgp/bgq kernel implemented
-#endif
+      ! generic kernel complex case
+#if defined(WITH_COMPLEX_GENERIC_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC ) then
+          ! is a block1 implementation
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_
+#include "./complex_generic_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC )
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_GENERIC_KERNEL */
+#endif /* COMPLEXCASE */
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GENERIC_SIMPLE_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+        ! generic simple block1 real kernel
+#if defined(WITH_REAL_GENERIC_SIMPLE_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+        if (kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE_BLOCK1) then
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+! same code as real
+#include "./complex_generic_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+        endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_GENERIC_SIMPLE_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+        ! generic simple complex case
+#if defined(WITH_COMPLEX_GENERIC_SIMPLE_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE) then
+          ! is a block1 implementation
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+#include "./complex_generic_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_GENERIC_SIMPLE_KERNEL */
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GENERIC_SIMPLE_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+        ! generic simple real kernel
+#if defined(WITH_REAL_GENERIC_SIMPLE_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+        if (kernel .eq. ELPA_2STAGE_REAL_GENERIC_SIMPLE) then
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+#include "./real_generic_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+        endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_GENERIC_SIMPLE_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+#if defined(WITH_COMPLEX_GENERIC_SIMPLE_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        if (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE_BLOCK2) then
+          ! is a block1 implementation
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _generic_simple_
+#include "./real_generic_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_GENERIC_SIMPLE_BLOCK2)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_GENERIC_SIMPLE_KERNEL */
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GENERIC_SIMPLE_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
     ! generic simple block4 real kernel
 
@@ -1100,9 +512,15 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_GENERIC_SIMPLE_BLOCK4_KERNEL */
-
 #endif /* REALCASE */
 
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GENERIC_SIMPLE_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
     !real generic simple block6 kernel
 #if defined(WITH_REAL_GENERIC_SIMPLE_BLOCK6_KERNEL)
@@ -1119,9 +537,15 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_GENERIC_SIMPLE_BLOCK6_KERNEL */
-
 #endif /* REALCASE */
 
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! GENERIC_SIMPLE_BLOCK8 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
     !real generic simple block8 kernel
 #if defined(WITH_REAL_GENERIC_SIMPLE_BLOCK8_KERNEL)
@@ -1138,13 +562,121 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_GENERIC_SIMPLE_BLOCK8_KERNEL */
-
 #endif /* REALCASE */
 
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif /* COMPLEXCASE == 1 */
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SSE_ASSEMBLY kernels real block2, complex block1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+        ! sse assembly kernel real case
+#if defined(WITH_REAL_SSE_ASSEMBLY_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+        if (kernel .eq. ELPA_2STAGE_REAL_SSE_ASSEMBLY) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sse_assembly
+#define _ASSEMBLY_
+#include "./real_block2_template.F90"
+#undef _ASSEMBLY_
+#ifndef WITH_FIXED_REAL_KERNEL
+        endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SSE_ASSEMBLY_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+        ! sse assembly kernel complex case
+#if defined(WITH_COMPLEX_SSE_ASSEMBLY_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_ASSEMBLY) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sse_assembly
+#define _ASSEMBLY_
+#include "./complex_block1_template.F90"
+#undef _ASSEMBLY_
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SSE_ASSEMBLY_KERNEL */
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SPARC64_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! not yet implemented
+#endif
+
+#if COMPLEXCASE == 1
+        ! sparc64 block1 complex kernel
+#if defined(WITH_COMPLEX_SPARC64_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+        if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL))
+!#undef VEC_SET
+!#define VEC_SET _sparc64_1hv_
+!#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL)) */
+!
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK1)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SPARC64_BLOCK1_KERNEL */
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SPARC64_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+      ! implementation of sparc64 block 2 real case
+#if defined(WITH_REAL_SPARC64_BLOCK2_KERNEL)
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      if (kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK2) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK6_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK4_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sparc64_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK6_KERNEL) && !defined(WITH_REAL_SPARC64_BLOCK4_KERNEL)) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SPARC64_BLOCK2_KERNEL */
+#endif /* REALCASE == 1 */
+
+
+#if COMPLEXCASE == 1
+      ! implementation of sparc64 block 2 complex case
+#if defined(WITH_COMPLEX_SPARC64_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+!#undef VEC_SET
+!#define VEC_SET _sparc64_
+!#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SPARC64_BLOCK2)
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SPARC64_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SPARC64_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
     ! sparc64 block 4 real kernel
-
 #if defined(WITH_REAL_SPARC64_BLOCK4_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
     if (kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK4) then
@@ -1161,57 +693,107 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_SPARC64_BLOCK4_KERNEL */
-
 #endif /* REALCASE */
 
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SPARC64_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
-    ! neon_arch64 block 4 real kernel
-
-#if defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL)
+    !sparc64 block6 real kernel
+#if defined(WITH_REAL_SPARC64_BLOCK6_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK4) then
+    if (kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK6) then
 
 #endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL))
 #undef VEC_SET
-#define VEC_SET _neon_arch64_
-#include "./real_block4_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL)) */
-
+#define VEC_SET _sparc64_
+#include "./real_block6_template.F90"
 #ifndef WITH_FIXED_REAL_KERNEL
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL */
-
+#endif /* WITH_REAL_SPARC64_BLOCK6_KERNEL */
 #endif /* REALCASE */
 
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VSX_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
-    ! sve128 block 4 real kernel
+! not yet implemented
+#endif
 
-#if defined(WITH_REAL_SVE128_BLOCK4_KERNEL)
+#if COMPLEXCASE == 1
+      ! vsx block1 complex kernel
+#if defined(WITH_COMPLEX_VSX_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL))
+!#undef VEC_SET
+!#define VEC_SET _vsx_
+!#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK1)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_VSX_BLOCK1_KERNEL */
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VSX_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+      ! implementation of vsx block 2 real case
+#if defined(WITH_REAL_VSX_BLOCK2_KERNEL)
+
 #ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK4) then
+      if (kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK2) then
 
 #endif /* not WITH_FIXED_REAL_KERNEL */
 
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL))
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_VSX_BLOCK6_KERNEL) && !defined(WITH_REAL_VSX_BLOCK4_KERNEL))
 #undef VEC_SET
-#define VEC_SET _sve128_
-#include "./real_block4_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL)) */
+#define VEC_SET _vsx_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_VSX_BLOCK6_KERNEL) && !defined(WITH_REAL_VSX_BLOCK4_KERNEL)) */
 
 #ifndef WITH_FIXED_REAL_KERNEL
-    endif
+      endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE128_BLOCK4_KERNEL */
+#endif /* WITH_REAL_VSX_BLOCK2_KERNEL */
+#endif /* REALCASE == 1 */
 
-#endif /* REALCASE */
+#if COMPLEXCASE == 1
+      ! implementation of vsx block 2 complex case
+#if defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+!#undef VEC_SET
+!#define VEC_SET _vsx_
+!#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_VSX_BLOCK2)
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_VSX_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VSX_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
     ! vsx block4 real kernel
-
 #if defined(WITH_REAL_VSX_BLOCK4_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
     if (kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK4) then
@@ -1228,12 +810,105 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_VSX_BLOCK4_KERNEL */
-
 #endif /* REALCASE */
 
-#if REALCASE == 1
-    ! sse block4 real kernel
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! VSX_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    !vsx block6 real kernel
+#if defined(WITH_REAL_VSX_BLOCK6_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK6) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _vsx_
+#include "./real_block6_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_VSX_BLOCK6_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implented
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SSE_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! not yet implemented
+#endif
+
+#if COMPLEXCASE == 1
+      ! sse block1 complex kernel
+#if defined(WITH_COMPLEX_SSE_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK1) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sse_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK1)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SSE_BLOCK1_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SSE_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+      ! implementation of sse block 2 real case
+#if defined(WITH_REAL_SSE_BLOCK2_KERNEL)
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      if (kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK2) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SSE_BLOCK6_KERNEL) && !defined(WITH_REAL_SSE_BLOCK4_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sse_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SSE_BLOCK6_KERNEL) && !defined(WITH_REAL_SSE_BLOCK4_KERNEL)) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SSE_BLOCK2_KERNEL */
+
+#endif /* REALCASE == 1 */
+#if COMPLEXCASE == 1
+      ! implementation of sse block 2 complex case
+
+#if defined(WITH_COMPLEX_SSE_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK2) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sse_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SSE_BLOCK2)
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SSE_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SSE_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
 #if defined(WITH_REAL_SSE_BLOCK4_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
     if (kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK4) then
@@ -1250,13 +925,448 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_SSE_BLOCK4_KERNEL */
-
 #endif /* REALCASE */
 
 #if COMPLEXCASE == 1
-    !no sse block4 complex kernel
+! not yet implemented
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SSE_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    !sse block6 real kernel
+#if defined(WITH_REAL_SSE_BLOCK6_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK6) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sse_
+#include "./real_block6_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SSE_BLOCK6_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+    ! no sse block6 complex kernel
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! NEON_ARCH64_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! not yet implemented
+#endif
+#if COMPLEXCASE == 1
+#if defined(WITH_COMPLEX_NEON_ARCH64_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK1) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL))
+#undef VEC_SET
+#define VEC_SET _neon_arch64_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK1)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_NEON_ARCH64_BLOCK1_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! NEON_ARCH64_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+      ! implementation of neon_arch64 block 2 real case
+#if defined(WITH_REAL_NEON_ARCH64_BLOCK2_KERNEL)
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      if (kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK2) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL))
+#undef VEC_SET
+#define VEC_SET _neon_arch64_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL)) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_NEON_ARCH64_BLOCK2_KERNEL */
+#endif /* REALCASE == 1 */
+
+#if COMPLEXCASE == 1
+#if defined(WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK2) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _neon_arch64_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_NEON_ARCH64_BLOCK2)
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_NEON_ARCH64_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! NEON_ARCH64_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    ! neon_arch64 block 4 real kernel
+#if defined(WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK4) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL))
+#undef VEC_SET
+#define VEC_SET _neon_arch64_
+#include "./real_block4_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL)) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! NEON_ARCH64_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    !neon_arch64 block6 real kernel
+#if defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK6) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _neon_arch64_
+#include "./real_block6_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE128_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! not yet implemented
+#endif
+#if COMPLEXCASE == 1
+      ! sve128 block1 complex kernel
+#if defined(WITH_COMPLEX_SVE128_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK1) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve128_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK1)
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SVE128_BLOCK1_KERNEL */
 #endif /* COMPLEXCASE */
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE128_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+#if defined(WITH_REAL_SVE128_BLOCK2_KERNEL)
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      if (kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK2) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK4_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve128_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK4_KERNEL)) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE128_BLOCK2_KERNEL */
+#endif /* REALCASE == 1 */
+
+#if COMPLEXCASE == 1
+      ! implementation of sve128 block 2 complex case
+
+#if defined(WITH_COMPLEX_SVE128_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK2) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sve128_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! (kernel .eq. ELPA_2STAGE_COMPLEX_SVE128_BLOCK2)
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SVE128_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE128_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    ! sve128 block 4 real kernel
+#if defined(WITH_REAL_SVE128_BLOCK4_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK4) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve128_
+#include "./real_block4_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE128_BLOCK6_KERNEL)) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE128_BLOCK4_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE128_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    !sve128 block6 real kernel
+#if defined(WITH_REAL_SVE128_BLOCK6_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK6) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sve128_
+#include "./real_block6_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE128_BLOCK6_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE256_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! not yet implemented
+#endif
+
+#if COMPLEXCASE == 1
+#if defined(WITH_COMPLEX_SVE256_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK1)) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve256_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK1))
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SVE256_BLOCK1_KERNEL */
+#endif /* COMPLEXCASE */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE256_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+#if defined(WITH_REAL_SVE256_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+
+      if ((kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK2))  then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK4_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve256_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE256_BLOCK2_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+      ! implementation of sve256 block 2 complex case
+#if defined(WITH_COMPLEX_SVE256_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK2) ) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sve256_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE256_BLOCK2) )
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /*  WITH_COMPLEX_SVE256_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE */
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE256_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    ! sve256 block4 real kernel
+#if defined(WITH_REAL_SVE256_BLOCK4_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if ((kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK4)) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK6_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve256_
+#include "./real_block4_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK6_KERNEL)) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE256_BLOCK4_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE256_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+#if defined(WITH_REAL_SVE256_BLOCK6_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if ((kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK6)) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sve256_
+#include "./real_block6_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE256_BLOCK6_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+      !no avx block1 real kernel
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+      ! avx block1 complex kernel
+#if defined(WITH_COMPLEX_AVX_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK1)) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL) )
+#undef VEC_SET
+#define VEC_SET _avx_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK1) )
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_AVX_BLOCK1_KERNEL */
+#endif /* COMLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+      ! implementation of avx block 2 real case
+#if defined(WITH_REAL_AVX_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+
+      if ((kernel .eq. ELPA_2STAGE_REAL_AVX_BLOCK2))  then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX_BLOCK4_KERNEL) )
+#undef VEC_SET
+#define VEC_SET _avx_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_AVX_BLOCK2_KERNEL */
+#endif /* REALCASE == 1 */
+
+#if COMPLEXCASE == 1
+      ! implementation of avx block 2 complex case
+#if defined(WITH_COMPLEX_AVX_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK2) ) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _avx_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX_BLOCK2) )
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_AVX_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
     ! avx block4 real kernel
 #if defined(WITH_REAL_AVX_BLOCK4_KERNEL) 
@@ -1275,7 +1385,104 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_AVX_BLOCK4_KERNEL */
+#endif /* REALCASE == 1 */
 
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+#if REALCASE == 1
+    ! avx block6 real kernel
+#if defined(WITH_REAL_AVX_BLOCK6_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if ((kernel .eq. ELPA_2STAGE_REAL_AVX_BLOCK6)) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#undef VEC_SET
+#define VEC_SET _avx_
+#include "./real_block6_template.F90"
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_AVX_BLOCK6_KERNEL */
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+#endif /* REALCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX2_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! not yet implemented
+#endif
+
+#if COMPLEXCASE == 1
+#if defined(WITH_COMPLEX_AVX2_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK1)) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL))
+#undef VEC_SET
+#define VEC_SET _avx2_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL)) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK1))
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_AVX2_BLOCK1_KERNEL */
+#endif /* COMPLEXCASE */
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX2_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+#if defined(WITH_REAL_AVX2_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+
+      if ((kernel .eq. ELPA_2STAGE_REAL_AVX2_BLOCK2))  then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX2_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX2_BLOCK4_KERNEL))
+#undef VEC_SET
+#define VEC_SET _avx2_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_AVX2_BLOCK2_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+      ! implementation of avx2 block 2 complex case
+#if defined(WITH_COMPLEX_AVX2_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK2) ) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _avx2_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX2_BLOCK2) )
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /*  WITH_COMPLEX_AVX2_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX2_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
     ! avx2 block4 real kernel
 #if defined(WITH_REAL_AVX2_BLOCK4_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1293,183 +1500,16 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_AVX2_BLOCK4_KERNEL */
-
-    ! sve256 block4 real kernel
-#if defined(WITH_REAL_SVE256_BLOCK4_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if ((kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK4)) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK6_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sve256_
-#include "./real_block4_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE256_BLOCK6_KERNEL)) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE256_BLOCK4_KERNEL */
-
 #endif /* REALCASE */
 
 #if COMPLEXCASE == 1
     !no avx block4 complex kernel
 #endif
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX2_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
-    ! avx512 block4 real kernel
-
-#if defined(WITH_REAL_AVX512_BLOCK4_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_AVX512_BLOCK4) then
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK6_KERNEL))
-#undef VEC_SET
-#define VEC_SET _avx512_
-#include "./real_block4_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX_BLOCK6_KERNEL) ) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_AVX512_BLOCK4_KERNEL */
-
-
-! sve512 block4 real kernel
-
-#if defined(WITH_REAL_SVE512_BLOCK4_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_SVE512_BLOCK4) then
-#endif /* not WITH_FIXED_REAL_KERNEL */
-
-#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK6_KERNEL))
-#undef VEC_SET
-#define VEC_SET _sve512_
-#include "./real_block4_template.F90"
-#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX_BLOCK6_KERNEL) ) */
-
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE512_BLOCK4_KERNEL */
-
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-    !no avx512 block4 complex kernel
-    !no sve512 block4 complex kernel
-#endif /* COMPLEXCASE */
-
-
-#if REALCASE == 1
-    !sparc64 block6 real kernel
-#if defined(WITH_REAL_SPARC64_BLOCK6_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_SPARC64_BLOCK6) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sparc64_
-#include "./real_block6_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SPARC64_BLOCK6_KERNEL */
-
-#endif /* REALCASE */
-
-#if REALCASE == 1
-    !neon_arch64 block6 real kernel
-#if defined(WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_NEON_ARCH64_BLOCK6) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _neon_arch64_
-#include "./real_block6_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL */
-
-#endif /* REALCASE */
-
-
-#if REALCASE == 1
-    !sve128 block6 real kernel
-#if defined(WITH_REAL_SVE128_BLOCK6_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_SVE128_BLOCK6) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sve128_
-#include "./real_block6_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE128_BLOCK6_KERNEL */
-
-#endif /* REALCASE */
-
-#if REALCASE == 1
-    !vsx block6 real kernel
-#if defined(WITH_REAL_VSX_BLOCK6_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_VSX_BLOCK6) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _vsx_
-#include "./real_block6_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_VSX_BLOCK6_KERNEL */
-
-#endif /* REALCASE */
-
-#if REALCASE == 1
-    !sse block6 real kernel
-#if defined(WITH_REAL_SSE_BLOCK6_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if (kernel .eq. ELPA_2STAGE_REAL_SSE_BLOCK6) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _sse_
-#include "./real_block6_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SSE_BLOCK6_KERNEL */
-
-#endif /* REALCASE */
-
-#if COMPLEXCASE == 1
-    ! no sse block6 complex kernel
-#endif
-
-#if REALCASE == 1
-    ! avx block6 real kernel
-
-#if defined(WITH_REAL_AVX_BLOCK6_KERNEL)
-#ifndef WITH_FIXED_REAL_KERNEL
-    if ((kernel .eq. ELPA_2STAGE_REAL_AVX_BLOCK6)) then
-
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#undef VEC_SET
-#define VEC_SET _avx_
-#include "./real_block6_template.F90"
-#ifndef WITH_FIXED_REAL_KERNEL
-    endif
-#endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_AVX_BLOCK6_KERNEL */
-
     ! avx2 block6 real kernel
 
 #if defined(WITH_REAL_AVX2_BLOCK6_KERNEL)
@@ -1484,28 +1524,108 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_AVX2_BLOCK6_KERNEL */
+#endif /* REALCASE == 1 */
 
-    ! sve256 block6 real kernel
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
 
-#if defined(WITH_REAL_SVE256_BLOCK6_KERNEL)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX512_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE ==1 
+! not yet implemented
+#endif
+
+#if COMPLEXCASE == 1
+      ! avx512 block1 complex kernel
+#if defined(WITH_COMPLEX_AVX512_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK1)) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL) )
+#undef VEC_SET
+#define VEC_SET _avx512_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL) ) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK1))
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_AVX512_BLOCK1_KERNEL  */
+#endif /* COMPLEXCASE == 1 */
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX512_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+      ! implementation of avx512 block 2 real case
+#if defined(WITH_REAL_AVX512_BLOCK2_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
-    if ((kernel .eq. ELPA_2STAGE_REAL_SVE256_BLOCK6)) then
+
+      if ((kernel .eq. ELPA_2STAGE_REAL_AVX512_BLOCK2)) then
 
 #endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK6_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK4_KERNEL))
 #undef VEC_SET
-#define VEC_SET _sve256_
-#include "./real_block6_template.F90"
+#define VEC_SET _avx512_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_AVX512_BLOCK2_KERNEL */
+#endif /* REALCASE == 1 */
+
+#if COMPLEXCASE == 1
+! implementation of avx512 block 2 complex case
+#if defined(WITH_COMPLEX_AVX512_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK2)) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _avx512_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_AVX512_BLOCK2))
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_AVX512_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE == 1 */
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX512_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+    ! avx512 block4 real kernel
+#if defined(WITH_REAL_AVX512_BLOCK4_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_AVX512_BLOCK4) then
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK6_KERNEL))
+#undef VEC_SET
+#define VEC_SET _avx512_
+#include "./real_block4_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_AVX512_BLOCK6_KERNEL) ) */
+
 #ifndef WITH_FIXED_REAL_KERNEL
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
-#endif /* WITH_REAL_SVE256_BLOCK6_KERNEL */
-
-#endif /* REALCASE */
+#endif /* WITH_REAL_AVX512_BLOCK4_KERNEL */
+#endif /* REALCASE == 1 */
 
 #if COMPLEXCASE == 1
-    !no avx block6 complex kernel
+! not yet implemented
 #endif
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! AVX512_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #if REALCASE == 1
     ! avx512 block6 kernel
 #if defined(WITH_REAL_AVX512_BLOCK6_KERNEL)
@@ -1519,8 +1639,111 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_AVX512_BLOCK6_KERNEL */
+#endif /* REALCASE == 1 */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE512_BLOCK1 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! not yet implemented
+#endif
+
+#if COMPLEXCASE == 1
+      ! sve512 block1 complex kernel
+#if defined(WITH_COMPLEX_SVE512_BLOCK1_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK1)) then
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+
+#if (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL) )
+#undef VEC_SET
+#define VEC_SET _sve512_
+#include "./complex_block1_template.F90"
+#endif /* (!defined(WITH_FIXED_COMPLEX_KERNEL)) || (defined(WITH_FIXED_COMPLEX_KERNEL) && !defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL) ) */
+
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ((kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK1))
+#endif /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SVE512_BLOCK1_KERNEL  */
+#endif /* COMPLEXCASE */
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE512_BLOCK2 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! implementation of sve512 block 2 real case
+#if defined(WITH_REAL_SVE512_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+
+      if ((kernel .eq. ELPA_2STAGE_REAL_SVE512_BLOCK2)) then
+
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK6_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK4_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve512_
+#include "./real_block2_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) ... */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+      endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE512_BLOCK2_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! implementation of vse512 block 2 complex case
+#if defined(WITH_COMPLEX_SVE512_BLOCK2_KERNEL)
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      if ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK2)) then
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#undef VEC_SET
+#define VEC_SET _sve512_
+#include "./complex_block2_template.F90"
+#ifndef WITH_FIXED_COMPLEX_KERNEL
+      endif ! ( (kernel .eq. ELPA_2STAGE_COMPLEX_SVE512_BLOCK2))
+#endif  /* not WITH_FIXED_COMPLEX_KERNEL */
+#endif /* WITH_COMPLEX_SVE512_BLOCK2_KERNEL */
+#endif /* COMPLEXCASE */
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE512_BLOCK4 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
+! sve512 block4 real kernel
+#if defined(WITH_REAL_SVE512_BLOCK4_KERNEL)
+#ifndef WITH_FIXED_REAL_KERNEL
+    if (kernel .eq. ELPA_2STAGE_REAL_SVE512_BLOCK4) then
+#endif /* not WITH_FIXED_REAL_KERNEL */
+
+#if (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK6_KERNEL))
+#undef VEC_SET
+#define VEC_SET _sve512_
+#include "./real_block4_template.F90"
+#endif /* (!defined(WITH_FIXED_REAL_KERNEL)) || (defined(WITH_FIXED_REAL_KERNEL) && !defined(WITH_REAL_SVE512_BLOCK6_KERNEL) ) */
+
+#ifndef WITH_FIXED_REAL_KERNEL
+    endif
+#endif /* not WITH_FIXED_REAL_KERNEL */
+#endif /* WITH_REAL_SVE512_BLOCK4_KERNEL */
+#endif /* REALCASE */
+
+#if COMPLEXCASE == 1
+! not yet implemented
+#endif
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SVE512_BLOCK6 kernels
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if REALCASE == 1
 ! sve512 block6 kernel
 #if defined(WITH_REAL_SVE512_BLOCK6_KERNEL)
 #ifndef WITH_FIXED_REAL_KERNEL
@@ -1533,12 +1756,10 @@ kernel)
     endif
 #endif /* not WITH_FIXED_REAL_KERNEL */
 #endif /* WITH_REAL_SVE512_BLOCK6_KERNEL */
-
 #endif /* REALCASE */
 
 #if COMPLEXCASE == 1
-    !no avx512 block6 complex kernel
-    !no sve512 block6 complex kernel
+!not yet implemented
 #endif /* COMPLEXCASE */
 
     if (wantDebug) then
