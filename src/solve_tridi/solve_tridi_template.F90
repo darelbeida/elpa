@@ -369,6 +369,10 @@ subroutine solve_tridi_&
       use merge_systems
       use ELPA_utilities
       use distribute_global_column
+
+      !Soheil
+      use advisor_annotate
+
       implicit none
       class(elpa_abstract_impl_t), intent(inout) :: obj
 
@@ -533,11 +537,15 @@ subroutine solve_tridi_&
       allocate(l_col(na), p_col_i(na),  p_col_o(na), stat=istat, errmsg=errorMessage)
       check_deallocate("solve_tridi_col: l_col, p_col_i, p_col_o", istat, errorMessage)
 
+!Soheil
+      call annotate_site_begin("solve")
       do i=1,na
-        l_col(i) = i
-        p_col_i(i) = 0
-        p_col_o(i) = 0
+         call annotate_iteration_task("solve_tridi")
+         l_col(i) = i
+         p_col_i(i) = 0
+         p_col_o(i) = 0
       enddo
+      call annotate_site_end("solve")
 
       ! Merge subproblems
 

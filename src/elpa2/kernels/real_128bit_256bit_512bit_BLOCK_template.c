@@ -50,6 +50,10 @@
 
 #include <stdlib.h>
 
+//Soheil
+#include "advisor-annotate.h"
+
+
 #define CONCAT_8ARGS(a, b, c, d, e, f, g, h) CONCAT2_8ARGS(a, b, c, d, e, f, g, h)
 #define CONCAT2_8ARGS(a, b, c, d, e, f, g, h) a ## b ## c ## d ## e ## f ## g ## h
 
@@ -1769,8 +1773,12 @@ void CONCAT_7ARGS(PREFIX,_hh_trafo_real_,SIMD_SET,_,BLOCK,hv_,WORD_LENGTH) (DATA
 #if VEC_SET == SSE_128 || VEC_SET == AVX_256 || VEC_SET == AVX2_256 || VEC_SET == AVX_512
   #pragma ivdep
 #endif
+  //Soheil
+  ANNOTATE_SITE_BEGIN(hh_trafo);
   for (i = BLOCK; i < nb; i++)
     {
+      //Soheil
+      ANNOTATE_ITERATION_TASK(trafo);
 #ifdef BLOCK2
       s += hh[i-1] * hh[(i+ldh)];
 #endif
@@ -1809,7 +1817,7 @@ void CONCAT_7ARGS(PREFIX,_hh_trafo_real_,SIMD_SET,_,BLOCK,hv_,WORD_LENGTH) (DATA
 #endif /* BLOCK6 */
 
     }
-
+  ANNOTATE_SITE_END(hh_trafo);   //Soheil
   // Production level kernel calls with padding
 #ifdef BLOCK2
 
