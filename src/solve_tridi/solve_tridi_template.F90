@@ -68,6 +68,10 @@ subroutine solve_tridi_&
       use ELPA_utilities
       use distribute_global_column
       use elpa_mpi
+
+      !Soheil
+      use advisor_annotate
+      
       implicit none
 #include "../../src/general/precision_kinds.F90"
       class(elpa_abstract_impl_t), intent(inout) :: obj
@@ -128,6 +132,8 @@ subroutine solve_tridi_&
       check_allocate("solve_tridi: limits", istat, errorMessage)
 
       limits(0) = 0
+      !Soheil
+      call annotate_site_begin("solve_tridi_01")
       do np=0,np_cols-1
         nc = local_index(na, np, np_cols, nblk, -1) ! number of columns on proc column np
 
@@ -136,6 +142,7 @@ subroutine solve_tridi_&
         ! Scalapack supports it but delivers no results for these columns,
         ! which is rather annoying
         if (nc==0) then
+           call annotate_iteration_task("solve_tridi_01_task")
           call obj%timer%stop("solve_tridi" // PRECISION_SUFFIX)
           if (wantDebug) write(error_unit,*) 'ELPA1_solve_tridi: ERROR: Problem contains processor column with zero width'
           success = .false.
@@ -143,15 +150,18 @@ subroutine solve_tridi_&
         endif
         limits(np+1) = limits(np) + nc
       enddo
-
+      call annotate_site_end
+      
       ! Subdivide matrix by subtracting rank 1 modifications
-
+      !Soheil
+      call annotate_site_begin("solve_tridi_02")
       do i=1,np_cols-1
+         call annotate_iteration_task("solve_tridi_02_task")
         n = limits(i)
         d(n) = d(n)-abs(e(n))
         d(n+1) = d(n+1)-abs(e(n))
       enddo
-
+      call annotate_site_end
       ! Solve sub problems on processsor columns
 
       nc = limits(my_pcol) ! column after which my problem starts
@@ -190,7 +200,10 @@ subroutine solve_tridi_&
       check_allocate("solve_tridi: p_col", istat, errorMessage)
 
       n = 0
+      !Soheil
+      call annotate_site_begin("solve_tridi_03")
       do np=0,np_cols-1
+         call annotate_iteration_task("solve_tridi_03_task")
         nc = local_index(na, np, np_cols, nblk, -1)
         do i=1,nc
           n = n+1
@@ -198,7 +211,8 @@ subroutine solve_tridi_&
           p_col(n) = np
         enddo
       enddo
-
+      call annotate_site_end
+      
       ! Block cyclic distribution scheme, only nev columns are set:
 
       allocate(l_col_bc(na), stat=istat, errmsg=errorMessage)
@@ -210,7 +224,10 @@ subroutine solve_tridi_&
       p_col_bc(:) = -1
       l_col_bc(:) = -1
 
+      !Soheil
+      call annotate_site_begin("solve_tridi_04")      
       do i = 0, na-1, nblk*np_cols
+         call annotate_iteration_task("solve_tridi_04_task")
         do j = 0, np_cols-1
           do n = 1, nblk
             if (i+j*nblk+n <= MIN(nev,na)) then
@@ -220,7 +237,8 @@ subroutine solve_tridi_&
            enddo
          enddo
       enddo
-
+      call annotate_site_end
+      
       ! Recursively merge sub problems
       call merge_recursive_&
            &PRECISION &
@@ -619,6 +637,10 @@ subroutine solve_tridi_&
      use elpa_abstract_impl
      use elpa_blas_interfaces
      use ELPA_utilities
+
+     !Soheil
+     use advisor_annotate
+     
      implicit none
      class(elpa_abstract_impl_t), intent(inout) :: obj
      integer(kind=ik)                         :: nlen, ldq
@@ -688,8 +710,9 @@ subroutine solve_tridi_&
 
       ! Check if eigenvalues are monotonically increasing
       ! This seems to be not always the case  (in the IBM implementation of dstedc ???)
-
-      do i=1,nlen-1
+       call annotate_site_begin("single_problem")
+       do i=1,nlen-1
+          
         if (d(i+1)<d(i)) then
 #ifdef DOUBLE_PRECISION_REAL
           if (abs(d(i+1) - d(i)) / abs(d(i+1) + d(i)) > 1e-14_rk8) then
@@ -702,7 +725,9 @@ subroutine solve_tridi_&
             write(error_unit,'(a)') 'The eigenvalues from a lapack call are not sorted to machine precision.'
             write(error_unit,'(a)') 'In this extent, this is completely harmless.'
             write(error_unit,'(a)') 'Still, we keep this info message just in case.'
-          end if
+         end if
+
+         call annotate_iteration_task("single_problem_task") 
           allocate(qtmp(nlen), stat=istat, errmsg=errorMessage)
           check_allocate("solve_tridi_single: qtmp", istat, errorMessage)
 
@@ -722,7 +747,9 @@ subroutine solve_tridi_&
           check_deallocate("solve_tridi_single: qtmp", istat, errorMessage)
 
        endif
-     enddo
+    enddo
+    call annotate_site_end
+    
      call obj%timer%stop("solve_tridi_single" // PRECISION_SUFFIX)
 
     end subroutine solve_tridi_single_problem_&
