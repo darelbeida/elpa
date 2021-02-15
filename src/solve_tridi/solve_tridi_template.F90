@@ -413,10 +413,14 @@ subroutine solve_tridi_&
 
       n = na
       ndiv = 1
+      !Soheil
+      call annotate_site_begin("01")
       do while(2*ndiv<=np_rows .and. n>2*min_submatrix_size)
+         call annotate_iteration_task("01_task")
         n = ((n+3)/4)*2 ! the bigger one of the two halves, we want EVEN boundaries
         ndiv = ndiv*2
       enddo
+      call annotate_site_end
 
       ! If there is only 1 processor row and not all eigenvectors are needed
       ! and the matrix size is big enough, then use 2 subdivisions
@@ -432,33 +436,49 @@ subroutine solve_tridi_&
       limits(ndiv) = na
 
       n = ndiv
+      !Soheil
+      call annotate_site_begin("02")
       do while(n>1)
         n = n/2 ! n is always a power of 2
+        call annotate_iteration_task("02_task")
         do i=0,ndiv-1,2*n
           ! We want to have even boundaries (for cache line alignments)
           limits(i+n) = limits(i) + ((limits(i+2*n)-limits(i)+3)/4)*2
         enddo
       enddo
+      call annotate_site_end
 
       ! Calculate the maximum size of a subproblem
 
       max_size = 0
+      !Soheil
+      call annotate_site_begin("03")
       do i=1,ndiv
-        max_size = MAX(max_size,limits(i)-limits(i-1))
+         call annotate_iteration_task("03_task")
+         max_size = MAX(max_size,limits(i)-limits(i-1))
       enddo
+      call annotate_site_end
+
 
       ! Subdivide matrix by subtracting rank 1 modifications
-
+      !Soheil
+      call annotate_site_begin("04")
       do i=1,ndiv-1
+         call annotate_iteration_task("04_task")
         n = limits(i)
         d(n) = d(n)-abs(e(n))
         d(n+1) = d(n+1)-abs(e(n))
       enddo
+      call annotate_site_end
+
 
       if (np_rows==1)    then
 
         ! For 1 processor row there may be 1 or 2 subdivisions
+         !Soheil
+         call annotate_site_begin("05")
         do n=0,ndiv-1
+           call annotate_iteration_task("05_task")
           noff = limits(n)        ! Start of subproblem
           nlen = limits(n+1)-noff ! Size of subproblem
 
@@ -469,6 +489,7 @@ subroutine solve_tridi_&
 
           if (.not.(success)) return
         enddo
+        call annotate_site_end
 
       else
 
@@ -496,9 +517,10 @@ subroutine solve_tridi_&
         endif
 
         ! Fill eigenvectors in qmat1 into global matrix q
-
+        !Soheil
+        call annotate_site_begin("06")
         do np = 0, ndiv-1
-
+           call annotate_iteration_task("06_task")
           noff = limits(np)
           nlen = limits(np+1)-noff
 #ifdef WITH_MPI
@@ -526,6 +548,7 @@ subroutine solve_tridi_&
           enddo
 
         enddo
+        call annotate_site_end
 
         deallocate(qmat1, qmat2, stat=istat, errmsg=errorMessage)
         check_deallocate("solve_tridi_col: qmat1, qmat2", istat, errorMessage)
@@ -537,40 +560,42 @@ subroutine solve_tridi_&
       allocate(l_col(na), p_col_i(na),  p_col_o(na), stat=istat, errmsg=errorMessage)
       check_deallocate("solve_tridi_col: l_col, p_col_i, p_col_o", istat, errorMessage)
 
-!Soheil
-      call annotate_site_begin("solve")
+      !Soheil
+      call annotate_site_begin("07")
       do i=1,na
-         call annotate_iteration_task("solve_tridi")
+         call annotate_iteration_task("07_task")
          l_col(i) = i
          p_col_i(i) = 0
          p_col_o(i) = 0
       enddo
-      call annotate_site_end("solve")
+      call annotate_site_end
 
       ! Merge subproblems
 
       n = 1
       do while(n<ndiv) ! if ndiv==1, the problem was solved by single call to solve_tridi_single
+         !Soheil
+         call annotate_site_begin("08")
+         do i=0,ndiv-1,2*n
+            call annotate_iteration_task("08_task")
+            noff = limits(i)
+            nmid = limits(i+n) - noff
+            nlen = limits(i+2*n) - noff
 
-        do i=0,ndiv-1,2*n
-
-          noff = limits(i)
-          nmid = limits(i+n) - noff
-          nlen = limits(i+2*n) - noff
-
-          if (nlen == na) then
-            ! Last merge, set p_col_o=-1 for unneeded (output) eigenvectors
-            p_col_o(nev+1:na) = -1
-          endif
-          call merge_systems_&
-          &PRECISION &
+            if (nlen == na) then
+               ! Last merge, set p_col_o=-1 for unneeded (output) eigenvectors
+               p_col_o(nev+1:na) = -1
+            endif
+            call merge_systems_&
+                 &PRECISION &
                               (obj, nlen, nmid, d(noff+1), e(noff+nmid), q, ldq, nqoff+noff, nblk, &
                                matrixCols, int(mpi_comm_rows,kind=ik), int(mpi_comm_self,kind=ik), &
                                l_col(noff+1), p_col_i(noff+1), &
                                l_col(noff+1), p_col_o(noff+1), 0, 1, useGPU, wantDebug, success, max_threads)
-          if (.not.(success)) return
+            if (.not.(success)) return
 
-        enddo
+         enddo
+         call annotate_site_end
 
         n = 2*n
 
