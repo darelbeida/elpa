@@ -55,7 +55,7 @@ subroutine trans_ev_band_to_full_&
     &MATH_DATATYPE&
     &_&
     &PRECISION &
-    (obj, na, nqc, nblk, nbw, a_mat, lda, tmat, q_mat, &
+    (obj, na, nev, nblk, nbw, a_mat, lda, tmat, q_mat, &
      ldq, matrixCols, numBlocks, mpi_comm_rows, mpi_comm_cols, useGPU &
 #if REALCASE == 1
      ,useQr)
@@ -72,7 +72,7 @@ subroutine trans_ev_band_to_full_&
 !
 !  na          Order of matrix a_mat, number of rows of matrix q_mat
 !
-!  nqc         Number of columns of matrix q_mat
+!  nev         Number of columns of matrix q_mat (aka nev)
 !
 !  nblk        blocksize of cyclic distribution, must be the same in both directions!
 !
@@ -110,7 +110,7 @@ subroutine trans_ev_band_to_full_&
 #if REALCASE == 1
   logical, intent(in)                     :: useQR
 #endif
-  integer(kind=ik)                       :: na, nqc, lda, ldq, nblk, nbw, matrixCols, numBlocks, mpi_comm_rows, mpi_comm_cols
+  integer(kind=ik)                       :: na, nev, lda, ldq, nblk, nbw, matrixCols, numBlocks, mpi_comm_rows, mpi_comm_cols
 #ifdef USE_ASSUMED_SIZE
   MATH_DATATYPE(kind=rck)                :: a_mat(lda,*)
   MATH_DATATYPE(kind=rck)                :: q_mat(ldq,*), tmat(nbw,nbw,*)
@@ -187,7 +187,7 @@ subroutine trans_ev_band_to_full_&
   call obj%timer%stop("mpi_communication")
 
   max_blocks_row = ((na -1)/nblk)/np_rows + 1 ! Rows of a_mat
-  max_blocks_col = ((nqc-1)/nblk)/np_cols + 1 ! Columns of q_mat!
+  max_blocks_col = ((nev-1)/nblk)/np_cols + 1 ! Columns of q_mat!
 
   max_local_rows = max_blocks_row*nblk
   max_local_cols = max_blocks_col*nblk
@@ -271,7 +271,7 @@ subroutine trans_ev_band_to_full_&
      t_tmp = 0.0_rck ! Must be set to 0 !!!
      t_tmp2 = 0.0_rck
   endif
-  l_cols = local_index(nqc, my_pcol, np_cols, nblk, -1) ! Local columns of q_mat
+  l_cols = local_index(nev, my_pcol, np_cols, nblk, -1) ! Local columns of q_mat
 
   blk_end = ((na-1)/nbw-1)/blocking_factor + 1
   do istep=1, blk_end
