@@ -62,7 +62,7 @@
 !
 !> \param na          Order of matrix a_mat, number of rows of matrix q_mat
 !>
-!> \param nqc         Number of columns of matrix q_mat
+!> \param nev         Number of columns of matrix q_mat (aka nev)
 !>
 !> \param a_mat(lda,matrixCols)  Matrix containing the Householder vectors (i.e. matrix a after tridiag_real)
 !>                           Distribution is like in Scalapack.
@@ -92,7 +92,7 @@ subroutine trans_ev_&
 &MATH_DATATYPE&
 &_&
 &PRECISION &
-(obj, na, nqc, a_mat, lda, tau, q_mat, ldq, nblk, matrixCols, mpi_comm_rows, mpi_comm_cols, useGPU)
+(obj, na, nev, a_mat, lda, tau, q_mat, ldq, nblk, matrixCols, mpi_comm_rows, mpi_comm_cols, useGPU)
   use cuda_functions
   use, intrinsic :: iso_c_binding
   use precision
@@ -102,7 +102,7 @@ subroutine trans_ev_&
   implicit none
 #include "../general/precision_kinds.F90"
   class(elpa_abstract_impl_t), intent(inout)    :: obj
-  integer(kind=ik), intent(in)                  :: na, nqc, lda, ldq, nblk, matrixCols, mpi_comm_rows, mpi_comm_cols
+  integer(kind=ik), intent(in)                  :: na, nev, lda, ldq, nblk, matrixCols, mpi_comm_rows, mpi_comm_cols
   MATH_DATATYPE(kind=rck), intent(in)           :: tau(na)
 
 #ifdef USE_ASSUMED_SIZE
@@ -171,7 +171,7 @@ subroutine trans_ev_&
 
   totalblocks = (na-1)/nblk + 1
   max_blocks_row = (totalblocks-1)/np_rows + 1
-  max_blocks_col = ((nqc-1)/nblk)/np_cols + 1  ! Columns of q_mat!
+  max_blocks_col = ((nev-1)/nblk)/np_cols + 1  ! Columns of q_mat!
 
   max_local_rows = max_blocks_row*nblk
   max_local_cols = max_blocks_col*nblk
@@ -219,7 +219,7 @@ subroutine trans_ev_&
   hvb = 0   ! Safety only
   blockStep = nblk
 
-  l_cols = local_index(nqc, my_pcol, np_cols, nblk, -1) ! Local columns of q_mat
+  l_cols = local_index(nev, my_pcol, np_cols, nblk, -1) ! Local columns of q_mat
 
   nstor = 0
   if (useGPU) then
