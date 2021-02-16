@@ -115,18 +115,26 @@
 !>     print *, "ELPA API version not supported"
 !>     stop
 !>   endif
-!>   elpa => elpa_allocate(success)
+!>   elpaInstance => elpa_allocate(success)
 !>   if (success /= ELPA_OK) then
 !>     print *,"Could not allocate ELPA"
 !>   endif
 !>
 !>   ! set parameters decribing the matrix and it's MPI distribution
-!>   call elpaIstance%set("na", na, success, success)
+!>   call elpaIstance%set("na", na, success)
 !>   if (success /= ELPA_OK) then
 !>     print *,"Could not set entry"
 !>   endif
-!>   call elpaInstance%set("nev", nev, success, success)
+!>   ! specify the number of eigenvectors to be computed
+!>   ! you will get the nev eigenvectors that correspond to the
+!>   ! nev _lowest_ eigenvalues
+!>   call elpaInstance%set("nev", nev, success)
 !>   ! check success code ...
+!>   ! _OR_ you can specify a range of eigenvectors to be computed
+!>   ! eigenvectors will be sorted in ascending order w.r.t.
+!>   ! the eigenvalues
+!>   call elpaInstance%set("lower_index_ev", 2, success)
+!>   call elpaInstance%set("upper_index_ev", 10, success) ! get the eigenvectors 2..10
 !>
 !>   call elpaInstance%set("local_nrows", na_rows, success)
 !>   ! check success code ...
@@ -191,7 +199,16 @@
 !>
 !>   /* Set parameters the matrix and it's MPI distribution */
 !>   elpa_set(handle, "na", na, &error);
+!>   /* specify the number of eigenvectors to be computed
+!>     you will get the nev eigenvectors that correspond to the
+!>     nev _lowest_ eigenvalues */
 !>   elpa_set(handle, "nev", nev, &error);
+!>   /* _OR_ you can specify a range of eigenvectors to be computed
+!>     eigenvectors will be sorted in ascending order w.r.t.
+!>     the eigenvalues */
+!>   elpa_set(handle, "lower_index_ev", 2, &error);
+!>   elpa_set(handle, "upper_index_ev", 2, &error); /* get the eigenvectors 2..10 */
+!>
 !>   elpa_set(handle, "local_nrows", na_rows, &error);
 !>   elpa_set(handle, "local_ncols", na_cols, &error);
 !>   elpa_set(handle, "nblk", nblk, &error);

@@ -230,6 +230,8 @@ module elpa_impl
       ! Associate some important integer pointers for convenience
       obj%na => obj%associate_int("na")
       obj%nev => obj%associate_int("nev")
+      obj%lower_index_ev => obj%associate_int("lower_index_ev")
+      obj%upper_index_ev => obj%associate_int("upper_index_ev")
       obj%local_nrows => obj%associate_int("local_nrows")
       obj%local_ncols => obj%associate_int("local_ncols")
       obj%nblk => obj%associate_int("nblk")
@@ -564,7 +566,7 @@ module elpa_impl
     function elpa_setup(self) result(error)
       class(elpa_impl_t), intent(inout)   :: self
       integer                             :: error, timings, performance, build_config
-
+      integer                             :: nev
 #ifdef WITH_MPI
       integer                             :: mpi_comm_parent, mpi_comm_rows, mpi_comm_cols, np_rows, np_cols, my_id, &
                                              process_row, process_col, mpi_string_length, &
@@ -575,8 +577,8 @@ module elpa_impl
       character(len=MPI_MAX_ERROR_STRING) :: mpierr_string
       character(*), parameter             :: MPI_CONSISTENCY_MSG = &
         "Provide mpi_comm_parent and EITHER process_row and process_col OR mpi_comm_rows and mpi_comm_cols. Aborting..."
-
 #endif
+      logical                             :: error_l
 
 
 #ifdef HAVE_LIKWID
@@ -598,6 +600,36 @@ module elpa_impl
         endif
       endif
 #endif
+
+      ! check consistency for nev and lower_index_ev and upper_index_ev
+      if ( self%is_set("lower_index_ev") == 1 .and. self%is_set("upper_index_ev") == 0) then
+        error = ELPA_ERROR_SETUP
+        error_l = check_elpa(error, "You have to either set BOTH the lower and upper indices of the EV range." &
+        & // "Or ONLY set nev. Aborting...", ELPA_ERROR_SETUP)
+      endif
+      if ( self%is_set("upper_index_ev") == 1 .and. self%is_set("lower_index_ev") == 1) then
+        error = ELPA_ERROR_SETUP
+        error_l = check_elpa(error, "You have to either set BOTH the lower and upper indices of the EV range." &
+        & // "Or ONLY set nev. Aborting...", ELPA_ERROR_SETUP)
+      endif
+      if ( self%is_set("lower_index_ev") == 1 .and. self%is_set("nev") == 1 .or. &
+           self%is_set("upper_index_ev") == 1 .and. self%is_set("nev") == 1)   then
+        error = ELPA_ERROR_SETUP
+        error_l = check_elpa(error, "You cannot specify nev and the lower and upper index for the EV range" &
+        & // "at the same time. Aborting...", ELPA_ERROR_SETUP)
+      endif
+
+      if (self%is_set("nev") == 1) then
+        call self%get("nev", nev, error)
+        if (check_elpa_get(error, ELPA_ERROR_SETUP)) return
+
+        if (nev /= 0) then
+          call self%set("lower_index_ev", 1, error)
+          if (check_elpa_set(error, ELPA_ERROR_SETUP)) return
+          call self%set("upper_index_ev", nev, error)
+          if (check_elpa_set(error, ELPA_ERROR_SETUP)) return
+        endif
+      endif
 
       error = ELPA_OK
 

@@ -63,6 +63,7 @@
     !>                                              Destroyed on exit (upper and lower half).
     !>
     !>  \param ev                                   On output: eigenvalues of a, every processor gets the complete set
+    !>                                              even if just a part of the eigenvectors is computed
     !>
     !>  \param q                                    On output: Eigenvectors of a
     !>                                              Distribution is like in Scalapack.

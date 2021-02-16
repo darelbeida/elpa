@@ -78,6 +78,8 @@ module elpa_api
     !< these have to be public for proper bounds checking, sadly
     integer(kind=c_int), public, pointer :: na => NULL()
     integer(kind=c_int), public, pointer :: nev => NULL()
+    integer(kind=c_int), public, pointer :: lower_index_ev => NULL()
+    integer(kind=c_int), public, pointer :: upper_index_ev => NULL()
     integer(kind=c_int), public, pointer :: local_nrows => NULL()
     integer(kind=c_int), public, pointer :: local_ncols => NULL()
     integer(kind=c_int), public, pointer :: nblk => NULL()

@@ -204,7 +204,7 @@ program test
    TEST_INT_MPI_TYPE  :: mpi_comm_rows, mpi_comm_cols, mpi_string_length, mpierr2
    character(len=MPI_MAX_ERROR_STRING) :: mpierr_string
 #endif
-
+   integer :: ii
    ignoreError = .false.
 
    call read_input_parameters_traditional(na, nev, nblk, write_to_file, skip_check_correctness)
@@ -721,6 +721,10 @@ program test
      call e%timer_stop("e%eigenvectors()")
 #endif
 #endif /* TEST_EIGENVECTORS  */
+
+     do ii=1,nev
+     print *,ii,ev(ii)
+     enddo
 
 #ifdef TEST_EIGENVALUES
      call e%timer_start("e%eigenvalues()")

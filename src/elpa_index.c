@@ -126,6 +126,8 @@ static int cannon_buffer_size_is_valid(elpa_index_t index, int n, int new_value)
 
 static int na_is_valid(elpa_index_t index, int n, int new_value);
 static int nev_is_valid(elpa_index_t index, int n, int new_value);
+static int lower_index_ev_is_valid(elpa_index_t index, int n, int new_value);
+static int upper_index_ev_is_valid(elpa_index_t index, int n, int new_value);
 static int bw_is_valid(elpa_index_t index, int n, int new_value);
 static int output_build_config_is_valid(elpa_index_t index, int n, int new_value);
 static int gpu_is_valid(elpa_index_t index, int n, int new_value);
@@ -189,6 +191,8 @@ static int elpa_double_value_to_string(char *name, double value, const char **st
 static const elpa_index_int_entry_t int_entries[] = {
         INT_PARAMETER_ENTRY("na", "Global matrix has size (na * na)", na_is_valid, PRINT_STRUCTURE),
         INT_PARAMETER_ENTRY("nev", "Number of eigenvectors to be computed, 0 <= nev <= na", nev_is_valid, PRINT_STRUCTURE),
+        INT_PARAMETER_ENTRY("lower_index_ev", "Lower index of the EV range to be computed, 1 <= lower_index_ev < upper_index_ev <= na", lower_index_ev_is_valid, PRINT_STRUCTURE),
+        INT_PARAMETER_ENTRY("upper_index_ev", "Upper index of the EV range to be computed, 1 <= lower_index_ev < upper_index_ev <= na", upper_index_ev_is_valid, PRINT_STRUCTURE),
         INT_PARAMETER_ENTRY("nblk", "Block size of scalapack block-cyclic distribution", is_positive, PRINT_STRUCTURE),
         INT_PARAMETER_ENTRY("local_nrows", "Number of matrix rows stored on this process", NULL, PRINT_NO),
         INT_PARAMETER_ENTRY("local_ncols", "Number of matrix columns stored on this process", NULL, PRINT_NO),
@@ -827,6 +831,28 @@ static int nev_is_valid(elpa_index_t index, int n, int new_value) {
                 return 0;
         }
         return 0 <= new_value && new_value <= elpa_index_get_int_value(index, "na", NULL);
+}
+
+static int lower_index_ev_is_valid(elpa_index_t index, int n, int new_value) {
+        if (!elpa_index_int_value_is_set(index, "na")) {
+                return 0;
+        }
+	if (elpa_index_int_value_is_set(index, "upper_index_ev")) {
+          return 1 <= new_value && new_value < elpa_index_get_int_value(index,"upper_index_ev", NULL) && new_value < elpa_index_get_int_value(index, "na", NULL);
+	} else {
+          return 1 <= new_value && new_value < elpa_index_get_int_value(index, "na", NULL);
+	}
+}
+
+static int upper_index_ev_is_valid(elpa_index_t index, int n, int new_value) {
+        if (!elpa_index_int_value_is_set(index, "na")) {
+                return 0;
+        }
+	if (elpa_index_int_value_is_set(index, "lower_index_ev")) {
+          return 2 <= new_value && elpa_index_get_int_value(index,"lower_index_ev", NULL) < new_value && new_value <= elpa_index_get_int_value(index, "na", NULL);
+	} else {
+          return 2 <= new_value && new_value <= elpa_index_get_int_value(index, "na", NULL);
+        }
 }
 
 static int is_positive(elpa_index_t index, int n, int new_value) {
