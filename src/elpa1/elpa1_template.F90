@@ -245,7 +245,8 @@ function elpa_solve_evp_&
    endif
 
    na         = obj%na
-   nev        = obj%nev
+   !nev        = obj%nev
+   nev        = obj%upper_index_ev
    matrixRows = obj%local_nrows
    nblk       = obj%nblk
    matrixCols = obj%local_ncols

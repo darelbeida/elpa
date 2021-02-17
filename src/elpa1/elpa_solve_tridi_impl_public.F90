@@ -88,7 +88,8 @@
       &PRECISION&
       &")
       na         = obj%na
-      nev        = obj%nev
+      !nev        = obj%nev
+      nev        = obj%upper_index_ev
       nblk       = obj%nblk
       matrixRows = obj%local_nrows
       matrixCols = obj%local_ncols

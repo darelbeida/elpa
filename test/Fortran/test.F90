@@ -143,6 +143,9 @@ program test
 
    ! matrix dimensions
    TEST_INT_TYPE     :: na, nev, nblk
+#ifdef TEST_EV_RANGE
+   TEST_INT_TYPE     :: lower_index_ev, upper_index_ev
+#endif
 
    ! mpi
    TEST_INT_TYPE     :: myid, nprocs
@@ -266,9 +269,17 @@ program test
    np_rows = nprocs/np_cols
    assert(nprocs == np_rows * np_cols)
 
+#if TEST_EV_RANGE == 1
+   lower_index_ev=1
+   upper_index_ev=nev
+#endif
    if (myid == 0) then
      print '((a,i0))', 'Matrix size: ', na
+#if TEST_EV_RANGE == 1
+     print '(3(a,i0))', 'Range of eigenvectors (hardcoded): lower_bound=', lower_index_ev,' ,upper_bound=',upper_index_ev
+#else
      print '((a,i0))', 'Num eigenvectors: ', nev
+#endif
      print '((a,i0))', 'Blocksize: ', nblk
 #ifdef WITH_MPI
      print '((a,i0))', 'Num MPI proc: ', nprocs
@@ -578,7 +589,12 @@ program test
 
    call e%set("na", int(na,kind=c_int), error_elpa)
    assert_elpa_ok(error_elpa)
+#if TEST_EV_RANGE == 1
+   call e%set("lower_index_ev", 1_c_int, error_elpa)
+   call e%set("upper_index_ev", int(nev,kind=c_int), error_elpa)
+#else
    call e%set("nev", int(nev,kind=c_int), error_elpa)
+#endif
    assert_elpa_ok(error_elpa)
    call e%set("local_nrows", int(na_rows,kind=c_int), error_elpa)
    assert_elpa_ok(error_elpa)
@@ -643,7 +659,7 @@ program test
    call e%set("gpu", TEST_GPU, error_elpa)
    assert_elpa_ok(error_elpa)
 
-#ifdef TEST_GPU_SET_ID
+#if TEST_GPU_SET_ID == 1
    ! simple test
    ! Can (and should) fail often
    gpuID = mod(myid,2)
@@ -733,10 +749,6 @@ program test
      call e%timer_stop("e%eigenvectors()")
 #endif
 #endif /* TEST_EIGENVECTORS  */
-
-     do ii=1,nev
-     print *,ii,ev(ii)
-     enddo
 
 #ifdef TEST_EIGENVALUES
      call e%timer_start("e%eigenvalues()")

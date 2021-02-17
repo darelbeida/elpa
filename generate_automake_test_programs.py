@@ -41,6 +41,11 @@ qr_flag = {
     1: "-DTEST_QR_DECOMPOSITION=1",
 }
 
+ev_range_flag = {
+    0: "-DTEST_EV_RANGE=0",
+    1: "-DTEST_EV_RANGE=1",
+}
+
 test_type_flag = {
     "eigenvectors":       "-DTEST_EIGENVECTORS",
     "eigenvalues":        "-DTEST_EIGENVALUES",
@@ -61,11 +66,12 @@ split_comm_flag = {
     "by_elpa": ""
 }
 
-for lang, m, g, gid, q, t, p, d, s, lay, spl in product(sorted(language_flag.keys()),
+for lang, m, g, gid, q, ev, t, p, d, s, lay, spl in product(sorted(language_flag.keys()),
                                                    sorted(matrix_flag.keys()),
                                                    sorted(gpu_flag.keys()),
                                                    sorted(gpu_id_flag.keys()),
                                                    sorted(qr_flag.keys()),
+                                                   sorted(ev_range_flag.keys()),
                                                    sorted(test_type_flag.keys()),
                                                    sorted(prec_flag.keys()),
                                                    sorted(domain_flag.keys()),
@@ -186,13 +192,14 @@ for lang, m, g, gid, q, t, p, d, s, lay, spl in product(sorted(language_flag.key
                 raise Exception("Oh no!")
             endifs += 1
 
-        name = "validate{langsuffix}_{d}_{p}_{t}_{s}{kernelsuffix}_{gpusuffix}{gpuidsuffix}{qrsuffix}{m}{layoutsuffix}{spl}".format(
+        name = "validate{langsuffix}_{d}_{p}_{t}_{s}{kernelsuffix}_{gpusuffix}{gpuidsuffix}{qrsuffix}{evrangesuffix}{m}{layoutsuffix}{spl}".format(
             langsuffix=language_flag[lang],
             d=d, p=p, t=t, s=s,
             kernelsuffix="" if kernel == "nokernel" else "_" + kernel,
             gpusuffix="gpu_" if g else "",
             gpuidsuffix="set_gpu_id_" if gid else "",
             qrsuffix="qr_" if q else "",
+            evrangesuffix="ev_range_" if ev else "",
             m=m,
             layoutsuffix="_all_layouts" if lay == "all_layouts" else "",
             spl="_split_comm_myself" if spl == "myself" else "")
@@ -238,6 +245,7 @@ for lang, m, g, gid, q, t, p, d, s, lay, spl in product(sorted(language_flag.key
             gpu_flag[g],
             gpu_id_flag[gid],
             qr_flag[q],
+            ev_range_flag[ev],
             matrix_flag[m]] + extra_flags))
 
         print("endif\n" * endifs)

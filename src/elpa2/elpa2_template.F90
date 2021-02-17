@@ -267,7 +267,9 @@
     endif
 
     na         = obj%na
-    nev        = obj%nev
+    !nev        = obj%nev
+    nev        = obj%upper_index_ev
+    !obj%nev    = nev
     nblk       = obj%nblk
     matrixCols = obj%local_ncols
     matrixRows = obj%local_nrows

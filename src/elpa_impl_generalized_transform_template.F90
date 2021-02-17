@@ -244,12 +244,12 @@
        ! Q <- inv(U) * Q
        call p&
            &BLAS_CHAR&
-           &trmm("L", "U", "N", "N", int(self%na,kind=BLAS_KIND), int(self%nev,kind=BLAS_KIND), &
+           &trmm("L", "U", "N", "N", int(self%na,kind=BLAS_KIND), int(self%upper_index_ev,kind=BLAS_KIND), &
                  ONE, b, 1_BLAS_KIND, 1_BLAS_KIND, int(sc_desc,kind=BLAS_KIND),  &
                  q, 1_BLAS_KIND, 1_BLAS_KIND, int(sc_desc,kind=BLAS_KIND))
 #else
        call BLAS_CHAR&
-           &trmm("L", "U", "N", "N", int(self%na,kind=BLAS_KIND), int(self%nev,kind=BLAS_KIND), &
+           &trmm("L", "U", "N", "N", int(self%na,kind=BLAS_KIND), int(self%upper_index_ev,kind=BLAS_KIND), &
                  ONE, b, int(self%na,kind=BLAS_KIND), q, int(self%na,kind=BLAS_KIND))
 #endif
        call self%timer_stop("scalapack multiply inv(U) * Q")

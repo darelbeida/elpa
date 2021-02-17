@@ -566,7 +566,7 @@ module elpa_impl
     function elpa_setup(self) result(error)
       class(elpa_impl_t), intent(inout)   :: self
       integer                             :: error, timings, performance, build_config
-      integer                             :: nev
+      integer                             :: nev, lower_index, upper_index
 #ifdef WITH_MPI
       integer                             :: mpi_comm_parent, mpi_comm_rows, mpi_comm_cols, np_rows, np_cols, my_id, &
                                              process_row, process_col, mpi_string_length, &
@@ -607,16 +607,25 @@ module elpa_impl
         error_l = check_elpa(error, "You have to either set BOTH the lower and upper indices of the EV range." &
         & // "Or ONLY set nev. Aborting...", ELPA_ERROR_SETUP)
       endif
-      if ( self%is_set("upper_index_ev") == 1 .and. self%is_set("lower_index_ev") == 1) then
+      if ( self%is_set("upper_index_ev") == 1 .and. self%is_set("lower_index_ev") == 0) then
         error = ELPA_ERROR_SETUP
         error_l = check_elpa(error, "You have to either set BOTH the lower and upper indices of the EV range." &
         & // "Or ONLY set nev. Aborting...", ELPA_ERROR_SETUP)
       endif
       if ( self%is_set("lower_index_ev") == 1 .and. self%is_set("nev") == 1 .or. &
            self%is_set("upper_index_ev") == 1 .and. self%is_set("nev") == 1)   then
-        error = ELPA_ERROR_SETUP
-        error_l = check_elpa(error, "You cannot specify nev and the lower and upper index for the EV range" &
-        & // "at the same time. Aborting...", ELPA_ERROR_SETUP)
+        call self%get("nev", nev, error)
+        if (check_elpa_get(error, ELPA_ERROR_SETUP)) return
+        call self%get("lower_index_ev", lower_index, error)
+        if (check_elpa_get(error, ELPA_ERROR_SETUP)) return
+        call self%get("upper_index_ev", upper_index, error)
+        if (check_elpa_get(error, ELPA_ERROR_SETUP)) return
+
+        if (lower_index .ne. 1 .and. upper_index .ne. nev) then
+          error = ELPA_ERROR_SETUP
+          error_l = check_elpa(error, "You cannot specify nev and the lower and upper index for the EV range" &
+                  & // "at the same time if the settings are inconsistent. Aborting...", ELPA_ERROR_SETUP)
+        endif
       endif
 
       if (self%is_set("nev") == 1) then
@@ -850,7 +859,8 @@ module elpa_impl
       sc_desc(2) = blacs_ctx
       sc_desc(3) = self%na
       if (rectangular_for_ev) then
-        sc_desc(4) = self%nev
+        !sc_desc(4) = self%nev
+        sc_desc(4) = self%upper_index_ev
       else
         sc_desc(4) = self%na
       endif
