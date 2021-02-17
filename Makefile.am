@@ -763,6 +763,7 @@ CLEANFILES = \
   elpa1_real* \
   elpa*.sh \
   test*.sh \
+  validate*.sh \
   single_real* \
   single_complex* \
   real* \
@@ -780,6 +781,8 @@ clean-local:
 	-rm -rf single_complex_2stage*.sh
 	-rm -rf single_real_2stage*.sh
 	-rm -rf double_instance_onenode*.sh
+	-rm -rf validate*.sh
+	-rm -rf test*.sh
 	-rm -rf $(generated_headers)
 
 distclean-local:

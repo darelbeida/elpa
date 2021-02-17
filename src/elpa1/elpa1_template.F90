@@ -138,7 +138,8 @@ function elpa_solve_evp_&
 #endif /* COMPLEXCASE */
 
 
-   integer(kind=c_int)                             :: l_cols, l_rows, l_cols_nev, np_rows, np_cols
+   integer(kind=c_int)                             :: l_cols, l_rows, l_cols_lower_index_ev, l_cols_upper_index_ev, &
+                                                      np_rows, np_cols
    integer(kind=MPI_KIND)                          :: np_rowsMPI, np_colsMPI
 
    logical                                         :: useGPU
@@ -156,7 +157,7 @@ function elpa_solve_evp_&
    logical                                         :: wantDebug
    integer(kind=c_int)                             :: istat, debug, gpu
    character(200)                                  :: errorMessage
-   integer(kind=ik)                                :: na, nev, nblk, matrixCols, &
+   integer(kind=ik)                                :: na, lower_index_ev, upper_index_ev, nblk, matrixCols, &
                                                       mpi_comm_rows, mpi_comm_cols,        &
                                                       mpi_comm_all, check_pd, i, error, matrixRows
    real(kind=C_DATATYPE_KIND)                      :: thres_pd
@@ -245,8 +246,9 @@ function elpa_solve_evp_&
    endif
 
    na         = obj%na
-   !nev        = obj%nev
-   nev        = obj%upper_index_ev
+   !upper_index_ev        = obj%nev
+   upper_index_ev        = obj%upper_index_ev
+   lower_index_ev        = obj%lower_index_ev
    matrixRows = obj%local_nrows
    nblk       = obj%nblk
    matrixCols = obj%local_ncols
@@ -292,8 +294,9 @@ function elpa_solve_evp_&
      return
    endif
 
-   if (nev == 0) then
-     nev = 1
+   if (upper_index_ev == 0) then
+     upper_index_ev = 1
+     lower_index_ev = 1
      obj%eigenvalues_only = .true.
    endif
 
@@ -407,7 +410,8 @@ function elpa_solve_evp_&
    l_rows = local_index(na, my_prow, np_rows, nblk, -1) ! Local rows of a and q
    l_cols = local_index(na, my_pcol, np_cols, nblk, -1) ! Local columns of q
 
-   l_cols_nev = local_index(nev, my_pcol, np_cols, nblk, -1) ! Local columns corresponding to nev
+   l_cols_lower_index_ev = local_index(lower_index_ev, my_pcol, np_cols, nblk, +1) ! Local columns corresponding to nev
+   l_cols_upper_index_ev = local_index(upper_index_ev, my_pcol, np_cols, nblk, -1) ! Local columns corresponding to nev
 
    allocate(q_real(l_rows,l_cols), stat=istat, errmsg=errorMessage)
    check_allocate("elpa1_template: q_real", istat, errorMessage)
@@ -455,7 +459,7 @@ function elpa_solve_evp_&
 #endif
      call solve_tridi_&
      &PRECISION&
-     & (obj, na, nev, ev, e,  &
+     & (obj, na, upper_index_ev, ev, e,  &
 #if REALCASE == 1
         q_actual, matrixRows,          &
 #endif
@@ -512,7 +516,7 @@ function elpa_solve_evp_&
    if (do_trans_ev) then
     ! q must be given thats why from here on we can use q and not q_actual
 #if COMPLEXCASE == 1
-     q(1:l_rows,1:l_cols_nev) = q_real(1:l_rows,1:l_cols_nev)
+     q(1:l_rows,1:l_cols_upper_index_ev) = q_real(1:l_rows,1:l_cols_upper_index_ev)
 #endif
      if (isSkewsymmetric) then
      ! Extra transformation step for skew-symmetric matrix. Multiplication with diagonal complex matrix D.
@@ -551,7 +555,8 @@ function elpa_solve_evp_&
      &MATH_DATATYPE&
      &_&
      &PRECISION&
-     & (obj, na, nev, a, matrixRows, tau, q, matrixRows, nblk, matrixCols, mpi_comm_rows, mpi_comm_cols, do_useGPU_trans_ev)
+     & (obj, na, upper_index_ev, a, matrixRows, tau, q, matrixRows, nblk, matrixCols, mpi_comm_rows, &
+        mpi_comm_cols, do_useGPU_trans_ev)
      if (isSkewsymmetric) then
        ! Transform imaginary part
        ! Transformation of real and imaginary part could also be one call of trans_ev_tridi acting on the n x 2n matrix.
@@ -559,8 +564,8 @@ function elpa_solve_evp_&
              &MATH_DATATYPE&
              &_&
              &PRECISION&
-             & (obj, na, nev, a, matrixRows, tau, q(1:matrixRows, matrixCols+1:2*matrixCols), matrixRows, nblk, matrixCols, &
-                mpi_comm_rows, mpi_comm_cols, do_useGPU_trans_ev)
+             & (obj, na, upper_index_ev, a, matrixRows, tau, q(1:matrixRows, matrixCols+1:2*matrixCols), matrixRows, nblk, &
+                matrixCols, mpi_comm_rows, mpi_comm_cols, do_useGPU_trans_ev)
        endif
 
 #ifdef WITH_NVTX

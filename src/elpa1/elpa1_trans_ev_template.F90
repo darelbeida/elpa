@@ -171,10 +171,13 @@ subroutine trans_ev_&
 
   totalblocks = (na-1)/nblk + 1
   max_blocks_row = (totalblocks-1)/np_rows + 1
-  max_blocks_col = ((nev-1)/nblk)/np_cols + 1  ! Columns of q_mat!
+  max_blocks_col = ((nev-1)/nblk)/np_cols + 1  ! Columns of q_mat! to be precise, this is the maximum number of blocks used (over
+                                               ! tasks) in order to store the local part of the nev vectors
 
   max_local_rows = max_blocks_row*nblk
-  max_local_cols = max_blocks_col*nblk
+  max_local_cols = max_blocks_col*nblk         ! the maximum (over all tasks) of columns needed to store the local part of
+                                               ! the nev vectors (in steps of nblk!). This means that for large block sizes
+                                               ! especially for a small number of nev, this value can be substantially too big
 
   max_stored_rows = (max_stored_rows_fac/nblk+1)*nblk
 
@@ -219,8 +222,7 @@ subroutine trans_ev_&
   hvb = 0   ! Safety only
   blockStep = nblk
 
-  l_cols = local_index(nev, my_pcol, np_cols, nblk, -1) ! Local columns of q_mat
-
+  l_cols = local_index(nev, my_pcol, np_cols, nblk, -1) ! Local columns of q_mat (i.e. the local part of nev)
   nstor = 0
   if (useGPU) then
     hvn_ubnd = 0
