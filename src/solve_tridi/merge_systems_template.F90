@@ -154,23 +154,13 @@
 
       call obj%timer%stop("mpi_communication")
 
-      !Soheil:
-       print *, 'This is rank ', my_prowMPI, ' na= ', na
-       print *, 'This is rank ', my_prowMPI, ' nm= ', nm
-       print *, 'This is rank ', my_prowMPI, ' ldq= ', ldq
-       print *, 'This is rank ', my_prowMPI, ' nqoff= ', nqoff
-       print *, 'This is rank ', my_prowMPI, ' nblk= ', nblk
-       print *, 'This is rank ', my_prowMPI, ' matrixCols= ', matrixCols
-       print *, 'This is rank ', my_prowMPI, ' npc_0= ', npc_0
-       print *, 'This is rank ', my_prowMPI, ' npc_n= ', npc_n
-
      ! If my processor column isn't in the requested set, do nothing
 
       if (my_pcol<npc_0 .or. my_pcol>=npc_0+npc_n) then
         call obj%timer%stop("merge_systems" // PRECISION_SUFFIX)
         return
       endif
-      ! Determine number of "next" and "prev" column for ring sends
+      ! Determine the MPI rank of "next" and "prev" column for ring sends
 
       if (my_pcol == npc_0+npc_n-1) then
         np_next = npc_0
@@ -242,15 +232,14 @@
          enddo
       endif
       
-
+!<<<<<<<<<< Timing LOOP 2 
       if (MOD((nqoff+nm)/nblk,np_rows)==my_prow) then
         ! nm+1 is local on my row
-	call obj%timer%start("merge_systems_loop2" // PRECISION_SUFFIX) 
         do i = 1, na
           if (p_col(i)==my_pcol) z(i) = z(i) + sig*q(l_rqm+1,l_col(i))
         enddo
-      endif
-      call obj%timer%stop("merge_systems_loop2" // PRECISION_SUFFIX) 
+     endif
+!>>>>>>>>>> End of timing LOOP 2. Fraction of exec. time: negligible      
 
       call global_gather_&
       &PRECISION&
@@ -259,7 +248,9 @@
       ! two normalized vectors, norm2(z) = sqrt(2).
       z = z/sqrt(2.0_rk)
       rho = 2.0_rk*beta
+      
       ! Calculate index for merging both systems by ascending eigenvalues
+      ! LAMRG: create permutation to merge two sorted lists
       call obj%timer%start("blas")
       call PRECISION_LAMRG( int(nm,kind=BLAS_KIND), int(na-nm,kind=BLAS_KIND), d, &
                             1_BLAS_KIND, 1_BLAS_KIND, idxBLAS )
@@ -278,23 +269,25 @@
 
       IF ( RHO*zmax <= TOL ) THEN
 
-        ! Rearrange eigenvalues
-	call obj%timer%start("merge_systems_loop3" // PRECISION_SUFFIX) 
-        tmp = d
-        do i=1,na
-          d(i) = tmp(idx(i))
-        enddo
-	call obj%timer%stop("merge_systems_loop3" // PRECISION_SUFFIX) 
-
+         ! Rearrange eigenvalues
+         call obj%timer%start("merge_systems_loop3" // PRECISION_SUFFIX)
+!<<<<<<<<<< Timing LOOP 3                   
+         tmp = d
+         do i=1,na
+            d(i) = tmp(idx(i))
+         enddo
+         call obj%timer%stop("merge_systems_loop3" // PRECISION_SUFFIX) 
+!>>>>>>>>>> End of timing LOOP 3. Fraction of exec. time: UNKNOWN. IF cond. not satisfied in the current test.
+         
         ! Rearrange eigenvectors
-        call resort_ev_&
+         call resort_ev_&
         &PRECISION &
                        (obj, idx, na, na, p_col_out, q, ldq, matrixCols, l_rows, l_rqe, &
                         l_rqs, mpi_comm_cols, p_col, l_col, l_col_out)
 
-        call obj%timer%stop("merge_systems" // PRECISION_SUFFIX)
+         call obj%timer%stop("merge_systems" // PRECISION_SUFFIX)
 
-        return
+         return
       ENDIF
 
       ! Merge and deflate system
@@ -311,8 +304,7 @@
       coltyp(1:nm) = 1
       coltyp(nm+1:na) = 3
       
-      call obj%timer%start("merge_systems_loop4" // PRECISION_SUFFIX) 
-
+!<<<<<<<<<< Timing LOOP 4
       do i=1,na
 
         if (rho*abs(z(idx(i))) <= tol) then
@@ -333,7 +325,7 @@
 
           ! Find sqrt(a**2+b**2) without overflow or
           ! destructive underflow.
-          TAU = PRECISION_LAPY2( C, S )
+          TAU = PRECISION_LAPY2( C, S )   ! LAPY2: sqrt( C^2 + S^2 )  
           T = D1(na1) - D(idx(i))
           C = C / TAU
           S = -S / TAU
@@ -408,7 +400,7 @@
         endif
 
       enddo
-      call obj%timer%stop("merge_systems_loop4" // PRECISION_SUFFIX) 
+!>>>>>>>>>> End of timing LOOP 4. Fraction of exec. time: negligible      
 
       call check_monotony_&
       &PRECISION&
@@ -429,13 +421,14 @@
         ! if(my_proc==0) print *,'--- Remark solve_tridi: na1==',na1,' proc==',myid
 
         if (na1==1) then
-          d(1) = d1(1) + rho*z1(1)**2 ! solve secular equation
+          d(1) = d1(1) + rho*z1(1)**2 ! solve secular (characteristic) equation
         else ! na1==2
-          call obj%timer%start("blas")
-          call PRECISION_LAED5(1_BLAS_KIND, d1, z1, qtrans(1,1), rho, d(1))
-          call PRECISION_LAED5(2_BLAS_KIND, d1, z1, qtrans(1,2), rho, d(2))
-          call obj%timer%stop("blas")
-          call transform_columns_&
+           call obj%timer%start("blas")
+           !LAED5: i-th eigenvalue after rank-1 update of 2x2 diagonal matrix
+           call PRECISION_LAED5(1_BLAS_KIND, d1, z1, qtrans(1,1), rho, d(1))
+           call PRECISION_LAED5(2_BLAS_KIND, d1, z1, qtrans(1,2), rho, d(2))
+           call obj%timer%stop("blas")
+           call transform_columns_&
           &PRECISION&
           &(obj, idx1(1), idx1(2), na, tmp, l_rqs, l_rqe, q, &
             ldq, matrixCols, l_rows, mpi_comm_cols, &
@@ -454,7 +447,8 @@
         call obj%timer%stop("blas")
         ! Rearrange eigenvalues
 
-	call obj%timer%start("merge_systems_loop5n6" // PRECISION_SUFFIX) 
+!<<<<<<<<<< Timing LOOP 5&6        
+!	call obj%timer%start("merge_systems_loop5n6" // PRECISION_SUFFIX) 
 
         tmp = d
         do i=1,na
@@ -470,8 +464,9 @@
             idxq1(i) = idx2(idx(i)-na1)
           endif
         enddo
-	call obj%timer%stop("merge_systems_loop5n6" // PRECISION_SUFFIX) 
-
+!	call obj%timer%stop("merge_systems_loop5n6" // PRECISION_SUFFIX) 
+!>>>>>>>>>> End of timing LOOP 5&6. Fraction of exec. time: UNKNOWN. Cond. na1==1 .or. na1==2 not currently satisfied
+ 
         call resort_ev_&
         &PRECISION&
         &(obj, idxq1, na, na, p_col_out, q, ldq, matrixCols, l_rows, l_rqe, &
@@ -479,7 +474,7 @@
 
       else if (na1>2) then
 
-        ! Solve secular equation
+        ! Solve secular (characteristic) equation
 
         z(1:na1) = 1
 #ifdef WITH_OPENMP_TRADITIONAL
@@ -497,8 +492,8 @@
 !        my_thread = omp_get_thread_num()
 !!$OMP DO
 !#endif
-	call obj%timer%start("merge_systems_loop7" // PRECISION_SUFFIX) 
 
+!<<<<<<<<<< Timing LOOP 7
         DO i = my_proc+1, na1, n_procs ! work distributed over all processors
           call obj%timer%start("blas")
           call PRECISION_LAED4(int(na1,kind=BLAS_KIND), int(i,kind=BLAS_KIND), d1, z1, delta, &
@@ -542,8 +537,8 @@
             ddiff(i) = delta(i)
           endif
         enddo
-	call obj%timer%stop("merge_systems_loop7" // PRECISION_SUFFIX) 
-
+!>>>>>>>>>> End of timing LOOP 7. Fraction of exec. time (own, not in BLAS): 1.2%
+ 
 !#ifdef WITH_OPENMP_TRADITIONAL
 !!$OMP END PARALLEL
 !
@@ -581,8 +576,9 @@
 !$OMP d1,dbase, ddiff, z, ev_scale, obj)
 
 #endif
-	call obj%timer%start("merge_systems_loop8" // PRECISION_SUFFIX) 
 
+!<<<<<<<<<<< Timing LOOP 8
+        
         DO i = my_proc+1, na1, n_procs ! work distributed over all processors
 
           ! tmp(1:na1) = z(1:na1) / delta(1:na1,i)  ! original code
@@ -602,8 +598,8 @@
         call obj%timer%stop("OpenMP parallel" // PRECISION_SUFFIX)
 
 #endif
-	call obj%timer%stop("merge_systems_loop8" // PRECISION_SUFFIX) 
-
+!>>>>>>>>>>> End of timing LOOP 8. Fraction of exec. time: 3.5%
+        
         call global_gather_&
         &PRECISION&
         &(obj, ev_scale, na1, mpi_comm_rows, mpi_comm_cols, npc_n, np_prev, np_next)
@@ -616,14 +612,14 @@
                              1_BLAS_KIND, 1_BLAS_KIND, idxBLAS )
         idx(:) = int(idxBLAS(:),kind=ik)
         call obj%timer%stop("blas")
-        ! Rearrange eigenvalues
-	call obj%timer%start("merge_systems_loop9" // PRECISION_SUFFIX) 
 
+!<<<<<<<<<<< Timing LOOP 9        
+        ! Rearrange eigenvalues
         tmp = d
         do i=1,na
           d(i) = tmp(idx(i))
         enddo
-	call obj%timer%stop("merge_systems_loop9" // PRECISION_SUFFIX) 
+!>>>>>>>>>>> End of timing LOOP 9. Fraction of exec. time: negligible
 
         call check_monotony_&
         &PRECISION&
@@ -642,8 +638,8 @@
 
         nqcols1 = 0 ! number of non-deflated eigenvectors
         nqcols2 = 0 ! number of deflated eigenvectors
-	call obj%timer%start("merge_systems_loop10" // PRECISION_SUFFIX) 
 
+!<<<<<<<<<< Timing LOOP 10
         DO i = 1, na
           if (p_col_out(i)==my_pcol) then
             if (idx(i)<=na1) then
@@ -655,7 +651,7 @@
             endif
           endif
         enddo
-	call obj%timer%stop("merge_systems_loop10" // PRECISION_SUFFIX) 
+!>>>>>>>>>>> End of timing LOOP 10. Fraction of exec. time: negligible 
 
         gemm_dim_k = MAX(1,l_rows)
         gemm_dim_l = max_local_cols
@@ -702,8 +698,8 @@
 
         ! Gather nonzero upper/lower components of old matrix Q
         ! which are needed for multiplication with new eigenvectors
-	call obj%timer%start("merge_systems_loop11n12" // PRECISION_SUFFIX) 
 
+!<<<<<<<<<< Timing LOOPS 11&12
         nnzu = 0
         nnzl = 0
         do i = 1, na1
@@ -730,22 +726,26 @@
             qtmp1(1:l_rows,ndef) = q(l_rqs:l_rqe,l_idx)
           endif
         enddo
-	call obj%timer%stop("merge_systems_loop11n12" // PRECISION_SUFFIX) 
+
+!>>>>>>>>>> End of timing LOOPS 11 & 12. Fraction of exec. time: 3.5%        
 
         l_cols_qreorg = ndef ! Number of columns in reorganized matrix
 
+!<<<<<<<<<< Timing LOOPS 13 & 14        
+call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX) 
         ! Set (output) Q to 0, it will sum up new Q
-	call obj%timer%start("merge_systems_loop13large" // PRECISION_SUFFIX) 
-
+!$omp parallel shared(np_rem, nnzu, nnzl, ndef)
+!$omp do        
         DO i = 1, na
           if(p_col_out(i)==my_pcol) q(l_rqs:l_rqe,l_col_out(i)) = 0
         enddo
+!$omp end do
 
         np_rem = my_pcol
-
+!$omp single
         do np = 1, npc_n
           ! Do a ring send of qtmp1
-
+           !$omp task shared(np_rem) depend(out:qtmp1, np_rem)
           if (np>1) then
 
             if (np_rem==npc_0) then
@@ -755,13 +755,15 @@
             endif
 #ifdef WITH_MPI
             call obj%timer%start("mpi_communication")
+            !Send to np_next, receive from np_prev
             call MPI_Sendrecv_replace(qtmp1, int(l_rows*max_local_cols,kind=MPI_KIND), MPI_REAL_PRECISION,     &
                                         int(np_next,kind=MPI_KIND), 1111_MPI_KIND, int(np_prev,kind=MPI_KIND), &
                                         1111_MPI_KIND, int(mpi_comm_cols,kind=MPI_KIND), MPI_STATUS_IGNORE, mpierr)
             call obj%timer%stop("mpi_communication")
 #endif /* WITH_MPI */
           endif
-
+          !$omp end task
+          
           if (useGPU) then
             successCUDA = cuda_memcpy(qtmp1_dev, int(loc(qtmp1(1,1)),kind=c_intptr_t), &
                  gemm_dim_k * gemm_dim_l  * size_of_datatype, cudaMemcpyHostToDevice)
@@ -773,6 +775,7 @@
 
           nnzu = 0
           nnzl = 0
+          !$omp task depend(in:np_rem)
           do i=1,na1
             if (p_col(idx1(i))==np_rem) then
               if (coltyp(idx1(i))==1 .or. coltyp(idx1(i))==2) then
@@ -787,10 +790,12 @@
               endif
             endif
           enddo
-
+          !$omp end task
+          
           ! Set the deflated eigenvectors in Q (comming from proc np_rem)
 
           ndef = MAX(nnzu,nnzl) ! Remote counter in input matrix
+          !$omp task firstprivate(ndef) depend(in:qtmp1)
           do i = 1, na
             j = idx(i)
             if (j>na1) then
@@ -801,9 +806,10 @@
               endif
             endif
           enddo
-
+          !$omp end task
+          
           do ns = 0, nqcols1-1, max_strip ! strimining loop
-
+             
             ncnt = MIN(max_strip,nqcols1-ns) ! number of columns in this strip
 
             ! Get partial result from (output) Q
@@ -923,8 +929,12 @@
 
           enddo   !ns = 0, nqcols1-1, max_strip ! strimining loop
         enddo    !do np = 1, npc_n
-	call obj%timer%stop("merge_systems_loop13large" // PRECISION_SUFFIX) 
-
+        !$omp end single
+        !$omp end parallel
+        
+        call obj%timer%stop("merge_systems_loop13" // PRECISION_SUFFIX)         
+!>>>>>>>>>> End timing LOOP 13&14. Fraction of exec. time (own): ~10%
+ 
         if(useGPU) then
           successCUDA = cuda_host_unregister(int(loc(qtmp1),kind=c_intptr_t))
           check_host_unregister_cuda("merge_systems: qtmp1", successCUDA)
