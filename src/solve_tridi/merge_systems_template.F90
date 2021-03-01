@@ -154,7 +154,17 @@
 
       call obj%timer%stop("mpi_communication")
 
-      ! If my processor column isn't in the requested set, do nothing
+      !Soheil:
+       print *, 'This is rank ', my_prowMPI, ' na= ', na
+       print *, 'This is rank ', my_prowMPI, ' nm= ', nm
+       print *, 'This is rank ', my_prowMPI, ' ldq= ', ldq
+       print *, 'This is rank ', my_prowMPI, ' nqoff= ', nqoff
+       print *, 'This is rank ', my_prowMPI, ' nblk= ', nblk
+       print *, 'This is rank ', my_prowMPI, ' matrixCols= ', matrixCols
+       print *, 'This is rank ', my_prowMPI, ' npc_0= ', npc_0
+       print *, 'This is rank ', my_prowMPI, ' npc_n= ', npc_n
+
+     ! If my processor column isn't in the requested set, do nothing
 
       if (my_pcol<npc_0 .or. my_pcol>=npc_0+npc_n) then
         call obj%timer%stop("merge_systems" // PRECISION_SUFFIX)
@@ -228,16 +238,19 @@
       if (MOD((nqoff+nm-1)/nblk,np_rows)==my_prow) then
         ! nm is local on my row
         do i = 1, na
-          if (p_col(i)==my_pcol) z(i) = q(l_rqm,l_col(i))
+         if (p_col(i)==my_pcol) z(i) = q(l_rqm,l_col(i))
          enddo
       endif
+      
 
       if (MOD((nqoff+nm)/nblk,np_rows)==my_prow) then
         ! nm+1 is local on my row
+	call obj%timer%start("merge_systems_loop2" // PRECISION_SUFFIX) 
         do i = 1, na
           if (p_col(i)==my_pcol) z(i) = z(i) + sig*q(l_rqm+1,l_col(i))
         enddo
       endif
+      call obj%timer%stop("merge_systems_loop2" // PRECISION_SUFFIX) 
 
       call global_gather_&
       &PRECISION&
@@ -266,11 +279,12 @@
       IF ( RHO*zmax <= TOL ) THEN
 
         ! Rearrange eigenvalues
-
+	call obj%timer%start("merge_systems_loop3" // PRECISION_SUFFIX) 
         tmp = d
         do i=1,na
           d(i) = tmp(idx(i))
         enddo
+	call obj%timer%stop("merge_systems_loop3" // PRECISION_SUFFIX) 
 
         ! Rearrange eigenvectors
         call resort_ev_&
@@ -296,6 +310,8 @@
 
       coltyp(1:nm) = 1
       coltyp(nm+1:na) = 3
+      
+      call obj%timer%start("merge_systems_loop4" // PRECISION_SUFFIX) 
 
       do i=1,na
 
@@ -392,6 +408,8 @@
         endif
 
       enddo
+      call obj%timer%stop("merge_systems_loop4" // PRECISION_SUFFIX) 
+
       call check_monotony_&
       &PRECISION&
       &(obj, na1,d1,'Sorted1', wantDebug, success)
@@ -436,6 +454,8 @@
         call obj%timer%stop("blas")
         ! Rearrange eigenvalues
 
+	call obj%timer%start("merge_systems_loop5n6" // PRECISION_SUFFIX) 
+
         tmp = d
         do i=1,na
           d(i) = tmp(idx(i))
@@ -450,6 +470,8 @@
             idxq1(i) = idx2(idx(i)-na1)
           endif
         enddo
+	call obj%timer%stop("merge_systems_loop5n6" // PRECISION_SUFFIX) 
+
         call resort_ev_&
         &PRECISION&
         &(obj, idxq1, na, na, p_col_out, q, ldq, matrixCols, l_rows, l_rqe, &
@@ -475,6 +497,8 @@
 !        my_thread = omp_get_thread_num()
 !!$OMP DO
 !#endif
+	call obj%timer%start("merge_systems_loop7" // PRECISION_SUFFIX) 
+
         DO i = my_proc+1, na1, n_procs ! work distributed over all processors
           call obj%timer%start("blas")
           call PRECISION_LAED4(int(na1,kind=BLAS_KIND), int(i,kind=BLAS_KIND), d1, z1, delta, &
@@ -518,6 +542,8 @@
             ddiff(i) = delta(i)
           endif
         enddo
+	call obj%timer%stop("merge_systems_loop7" // PRECISION_SUFFIX) 
+
 !#ifdef WITH_OPENMP_TRADITIONAL
 !!$OMP END PARALLEL
 !
@@ -555,6 +581,8 @@
 !$OMP d1,dbase, ddiff, z, ev_scale, obj)
 
 #endif
+	call obj%timer%start("merge_systems_loop8" // PRECISION_SUFFIX) 
+
         DO i = my_proc+1, na1, n_procs ! work distributed over all processors
 
           ! tmp(1:na1) = z(1:na1) / delta(1:na1,i)  ! original code
@@ -574,6 +602,7 @@
         call obj%timer%stop("OpenMP parallel" // PRECISION_SUFFIX)
 
 #endif
+	call obj%timer%stop("merge_systems_loop8" // PRECISION_SUFFIX) 
 
         call global_gather_&
         &PRECISION&
@@ -588,10 +617,14 @@
         idx(:) = int(idxBLAS(:),kind=ik)
         call obj%timer%stop("blas")
         ! Rearrange eigenvalues
+	call obj%timer%start("merge_systems_loop9" // PRECISION_SUFFIX) 
+
         tmp = d
         do i=1,na
           d(i) = tmp(idx(i))
         enddo
+	call obj%timer%stop("merge_systems_loop9" // PRECISION_SUFFIX) 
+
         call check_monotony_&
         &PRECISION&
         &(obj, na,d,'Output', wantDebug, success)
@@ -609,6 +642,8 @@
 
         nqcols1 = 0 ! number of non-deflated eigenvectors
         nqcols2 = 0 ! number of deflated eigenvectors
+	call obj%timer%start("merge_systems_loop10" // PRECISION_SUFFIX) 
+
         DO i = 1, na
           if (p_col_out(i)==my_pcol) then
             if (idx(i)<=na1) then
@@ -620,6 +655,7 @@
             endif
           endif
         enddo
+	call obj%timer%stop("merge_systems_loop10" // PRECISION_SUFFIX) 
 
         gemm_dim_k = MAX(1,l_rows)
         gemm_dim_l = max_local_cols
@@ -666,6 +702,7 @@
 
         ! Gather nonzero upper/lower components of old matrix Q
         ! which are needed for multiplication with new eigenvectors
+	call obj%timer%start("merge_systems_loop11n12" // PRECISION_SUFFIX) 
 
         nnzu = 0
         nnzl = 0
@@ -693,10 +730,12 @@
             qtmp1(1:l_rows,ndef) = q(l_rqs:l_rqe,l_idx)
           endif
         enddo
+	call obj%timer%stop("merge_systems_loop11n12" // PRECISION_SUFFIX) 
 
         l_cols_qreorg = ndef ! Number of columns in reorganized matrix
 
         ! Set (output) Q to 0, it will sum up new Q
+	call obj%timer%start("merge_systems_loop13large" // PRECISION_SUFFIX) 
 
         DO i = 1, na
           if(p_col_out(i)==my_pcol) q(l_rqs:l_rqe,l_col_out(i)) = 0
@@ -884,6 +923,7 @@
 
           enddo   !ns = 0, nqcols1-1, max_strip ! strimining loop
         enddo    !do np = 1, npc_n
+	call obj%timer%stop("merge_systems_loop13large" // PRECISION_SUFFIX) 
 
         if(useGPU) then
           successCUDA = cuda_host_unregister(int(loc(qtmp1),kind=c_intptr_t))
