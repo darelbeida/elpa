@@ -807,7 +807,9 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
             endif
           enddo
           !$omp end task
-          
+
+!<<<<<<<<<< Timing Strip mining of LOOPS 13 & 14        
+          call obj%timer%start("merge_systems_strip_mining" // PRECISION_SUFFIX)           
           do ns = 0, nqcols1-1, max_strip ! strimining loop
              
             ncnt = MIN(max_strip,nqcols1-ns) ! number of columns in this strip
@@ -927,7 +929,9 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               q(l_rqs:l_rqe,l_col_out(idxq1(i+ns))) = qtmp2(1:l_rows,i)
             enddo
 
-          enddo   !ns = 0, nqcols1-1, max_strip ! strimining loop
+         enddo   !ns = 0, nqcols1-1, max_strip ! strimining loop
+!>>>>>>>>>> End timing Strip mining of LOOPS 13 & 14        
+         call obj%timer%stop("merge_systems_strip_mining" // PRECISION_SUFFIX)           
         enddo    !do np = 1, npc_n
         !$omp end single
         !$omp end parallel
