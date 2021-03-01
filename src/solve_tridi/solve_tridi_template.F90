@@ -69,8 +69,6 @@ subroutine solve_tridi_&
       use distribute_global_column
       use elpa_mpi
 
-      !Soheil
-      use advisor_annotate
       
       implicit none
 #include "../../src/general/precision_kinds.F90"
@@ -132,8 +130,7 @@ subroutine solve_tridi_&
       check_allocate("solve_tridi: limits", istat, errorMessage)
 
       limits(0) = 0
-      !Soheil
-      call annotate_site_begin("solve_tridi_01")
+
       do np=0,np_cols-1
         nc = local_index(na, np, np_cols, nblk, -1) ! number of columns on proc column np
 
@@ -142,7 +139,6 @@ subroutine solve_tridi_&
         ! Scalapack supports it but delivers no results for these columns,
         ! which is rather annoying
         if (nc==0) then
-           call annotate_iteration_task("solve_tridi_01_task")
           call obj%timer%stop("solve_tridi" // PRECISION_SUFFIX)
           if (wantDebug) write(error_unit,*) 'ELPA1_solve_tridi: ERROR: Problem contains processor column with zero width'
           success = .false.
@@ -150,18 +146,14 @@ subroutine solve_tridi_&
         endif
         limits(np+1) = limits(np) + nc
       enddo
-      call annotate_site_end
       
       ! Subdivide matrix by subtracting rank 1 modifications
-      !Soheil
-      call annotate_site_begin("solve_tridi_02")
       do i=1,np_cols-1
-         call annotate_iteration_task("solve_tridi_02_task")
         n = limits(i)
         d(n) = d(n)-abs(e(n))
         d(n+1) = d(n+1)-abs(e(n))
       enddo
-      call annotate_site_end
+
       ! Solve sub problems on processsor columns
 
       nc = limits(my_pcol) ! column after which my problem starts
@@ -200,10 +192,7 @@ subroutine solve_tridi_&
       check_allocate("solve_tridi: p_col", istat, errorMessage)
 
       n = 0
-      !Soheil
-      call annotate_site_begin("solve_tridi_03")
       do np=0,np_cols-1
-         call annotate_iteration_task("solve_tridi_03_task")
         nc = local_index(na, np, np_cols, nblk, -1)
         do i=1,nc
           n = n+1
@@ -211,7 +200,7 @@ subroutine solve_tridi_&
           p_col(n) = np
         enddo
       enddo
-      call annotate_site_end
+
       
       ! Block cyclic distribution scheme, only nev columns are set:
 
@@ -224,10 +213,7 @@ subroutine solve_tridi_&
       p_col_bc(:) = -1
       l_col_bc(:) = -1
 
-      !Soheil
-      call annotate_site_begin("solve_tridi_04")      
       do i = 0, na-1, nblk*np_cols
-         call annotate_iteration_task("solve_tridi_04_task")
         do j = 0, np_cols-1
           do n = 1, nblk
             if (i+j*nblk+n <= MIN(nev,na)) then
@@ -237,7 +223,6 @@ subroutine solve_tridi_&
            enddo
          enddo
       enddo
-      call annotate_site_end
       
       ! Recursively merge sub problems
       call merge_recursive_&
@@ -388,9 +373,6 @@ subroutine solve_tridi_&
       use ELPA_utilities
       use distribute_global_column
 
-      !Soheil
-      use advisor_annotate
-
       implicit none
       class(elpa_abstract_impl_t), intent(inout) :: obj
 
@@ -431,14 +413,10 @@ subroutine solve_tridi_&
 
       n = na
       ndiv = 1
-      !Soheil
-      call annotate_site_begin("01")
       do while(2*ndiv<=np_rows .and. n>2*min_submatrix_size)
-         call annotate_iteration_task("01_task")
         n = ((n+3)/4)*2 ! the bigger one of the two halves, we want EVEN boundaries
         ndiv = ndiv*2
       enddo
-      call annotate_site_end
 
       ! If there is only 1 processor row and not all eigenvectors are needed
       ! and the matrix size is big enough, then use 2 subdivisions
@@ -454,49 +432,34 @@ subroutine solve_tridi_&
       limits(ndiv) = na
 
       n = ndiv
-      !Soheil
-      call annotate_site_begin("02")
       do while(n>1)
         n = n/2 ! n is always a power of 2
-        call annotate_iteration_task("02_task")
         do i=0,ndiv-1,2*n
           ! We want to have even boundaries (for cache line alignments)
           limits(i+n) = limits(i) + ((limits(i+2*n)-limits(i)+3)/4)*2
         enddo
       enddo
-      call annotate_site_end
 
       ! Calculate the maximum size of a subproblem
 
       max_size = 0
-      !Soheil
-      call annotate_site_begin("03")
       do i=1,ndiv
-         call annotate_iteration_task("03_task")
          max_size = MAX(max_size,limits(i)-limits(i-1))
       enddo
-      call annotate_site_end
 
 
       ! Subdivide matrix by subtracting rank 1 modifications
-      !Soheil
-      call annotate_site_begin("04")
       do i=1,ndiv-1
-         call annotate_iteration_task("04_task")
         n = limits(i)
         d(n) = d(n)-abs(e(n))
         d(n+1) = d(n+1)-abs(e(n))
       enddo
-      call annotate_site_end
 
 
       if (np_rows==1)    then
 
         ! For 1 processor row there may be 1 or 2 subdivisions
-         !Soheil
-         call annotate_site_begin("05")
         do n=0,ndiv-1
-           call annotate_iteration_task("05_task")
           noff = limits(n)        ! Start of subproblem
           nlen = limits(n+1)-noff ! Size of subproblem
 
@@ -507,7 +470,6 @@ subroutine solve_tridi_&
 
           if (.not.(success)) return
         enddo
-        call annotate_site_end
 
       else
 
@@ -535,10 +497,7 @@ subroutine solve_tridi_&
         endif
 
         ! Fill eigenvectors in qmat1 into global matrix q
-        !Soheil
-        call annotate_site_begin("06")
         do np = 0, ndiv-1
-           call annotate_iteration_task("06_task")
           noff = limits(np)
           nlen = limits(np+1)-noff
 #ifdef WITH_MPI
@@ -566,7 +525,6 @@ subroutine solve_tridi_&
           enddo
 
         enddo
-        call annotate_site_end
 
         deallocate(qmat1, qmat2, stat=istat, errmsg=errorMessage)
         check_deallocate("solve_tridi_col: qmat1, qmat2", istat, errorMessage)
@@ -578,24 +536,17 @@ subroutine solve_tridi_&
       allocate(l_col(na), p_col_i(na),  p_col_o(na), stat=istat, errmsg=errorMessage)
       check_deallocate("solve_tridi_col: l_col, p_col_i, p_col_o", istat, errorMessage)
 
-      !Soheil
-      call annotate_site_begin("07")
       do i=1,na
-         call annotate_iteration_task("07_task")
          l_col(i) = i
          p_col_i(i) = 0
          p_col_o(i) = 0
       enddo
-      call annotate_site_end
 
       ! Merge subproblems
 
       n = 1
       do while(n<ndiv) ! if ndiv==1, the problem was solved by single call to solve_tridi_single
-         !Soheil
-         call annotate_site_begin("08")
          do i=0,ndiv-1,2*n
-            call annotate_iteration_task("08_task")
             noff = limits(i)
             nmid = limits(i+n) - noff
             nlen = limits(i+2*n) - noff
@@ -613,7 +564,6 @@ subroutine solve_tridi_&
             if (.not.(success)) return
 
          enddo
-         call annotate_site_end
 
         n = 2*n
 
@@ -638,8 +588,6 @@ subroutine solve_tridi_&
      use elpa_blas_interfaces
      use ELPA_utilities
 
-     !Soheil
-     use advisor_annotate
      
      implicit none
      class(elpa_abstract_impl_t), intent(inout) :: obj
@@ -710,7 +658,6 @@ subroutine solve_tridi_&
 
       ! Check if eigenvalues are monotonically increasing
       ! This seems to be not always the case  (in the IBM implementation of dstedc ???)
-       call annotate_site_begin("single_problem")
        do i=1,nlen-1
           
         if (d(i+1)<d(i)) then
@@ -727,7 +674,6 @@ subroutine solve_tridi_&
             write(error_unit,'(a)') 'Still, we keep this info message just in case.'
          end if
 
-         call annotate_iteration_task("single_problem_task") 
           allocate(qtmp(nlen), stat=istat, errmsg=errorMessage)
           check_allocate("solve_tridi_single: qtmp", istat, errorMessage)
 
@@ -748,7 +694,6 @@ subroutine solve_tridi_&
 
        endif
     enddo
-    call annotate_site_end
     
      call obj%timer%stop("solve_tridi_single" // PRECISION_SUFFIX)
 
