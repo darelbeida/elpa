@@ -1,3 +1,4 @@
+
 #if 0
 !    This file is part of ELPA.
 !
@@ -812,6 +813,9 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
           call obj%timer%start("merge_systems_strip_mining" // PRECISION_SUFFIX)           
           do ns = 0, nqcols1-1, max_strip ! strimining loop
              
+!<<<<<<<<<< Timing Strip mining part_1        
+             call obj%timer%start("merge_systems_strip_mining_part_1" // PRECISION_SUFFIX)
+             
             ncnt = MIN(max_strip,nqcols1-ns) ! number of columns in this strip
 
             ! Get partial result from (output) Q
@@ -834,6 +838,9 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               ev(1:nnzu,i) = zu(1:nnzu) / tmp(1:nnzu) * ev_scale(j)
             enddo
 
+!>>>>>>>>>> End of timing strip mining part_1        
+            call obj%timer%stop("merge_systems_strip_mining_part_1" // PRECISION_SUFFIX)
+            
             if(useGPU) then
               !TODO: it should be enough to copy l_rows x ncnt
               successCUDA = cuda_memcpy(qtmp2_dev, int(loc(qtmp2(1,1)),kind=c_intptr_t), &
@@ -870,6 +877,9 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               endif ! useGPU
             endif
 
+!<<<<<<<<<< Timing Strip mining part_2        
+            call obj%timer%start("merge_systems_strip_mining_part_2" // PRECISION_SUFFIX)
+            
             ! Compute eigenvectors of the rank-1 modified matrix.
             ! Parts for multiplying with lower half of Q:
 
@@ -884,6 +894,9 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               ev(1:nnzl,i) = zl(1:nnzl) / tmp(1:nnzl) * ev_scale(j)
             enddo
 
+!>>>>>>>>>> End of timing strip mining part_2
+            call obj%timer%stop("merge_systems_strip_mining_part_2" // PRECISION_SUFFIX)
+            
             if(useGPU) then
               !TODO the previous loop could be possible to do on device and thus
               !copy less
@@ -923,12 +936,18 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               check_memcpy_cuda("merge_systems: qtmp2_dev", successCUDA)
             endif
 
+!<<<<<<<<<< Timing Strip mining part_3        
+            call obj%timer%start("merge_systems_strip_mining_part_3" // PRECISION_SUFFIX)
+            
              ! Put partial result into (output) Q
 
             do i = 1, ncnt
-              q(l_rqs:l_rqe,l_col_out(idxq1(i+ns))) = qtmp2(1:l_rows,i)
+               q(l_rqs:l_rqe,l_col_out(idxq1(i+ns))) = qtmp2(1:l_rows,i)
             enddo
-
+           
+!>>>>>>>>>> End of timing strip mining part_3        
+            call obj%timer%stop("merge_systems_strip_mining_part_3" // PRECISION_SUFFIX)
+            
          enddo   !ns = 0, nqcols1-1, max_strip ! strimining loop
 !>>>>>>>>>> End timing Strip mining of LOOPS 13 & 14        
          call obj%timer%stop("merge_systems_strip_mining" // PRECISION_SUFFIX)           
