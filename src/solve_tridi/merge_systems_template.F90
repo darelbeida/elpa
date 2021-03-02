@@ -819,7 +819,7 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
             ncnt = MIN(max_strip,nqcols1-ns) ! number of columns in this strip
 
             ! Get partial result from (output) Q
-
+            !$omp taskloop num_tasks(50)
             do i = 1, ncnt
               qtmp2(1:l_rows,i) = q(l_rqs:l_rqe,l_col_out(idxq1(i+ns)))
             enddo
