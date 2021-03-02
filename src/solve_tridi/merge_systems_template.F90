@@ -823,10 +823,12 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
             do i = 1, ncnt
               qtmp2(1:l_rows,i) = q(l_rqs:l_rqe,l_col_out(idxq1(i+ns)))
             enddo
-
+            !$omp end taskloop
+            
             ! Compute eigenvectors of the rank-1 modified matrix.
             ! Parts for multiplying with upper half of Q:
 
+            !$omp taskloop num_tasks(50)
             do i = 1, ncnt
               j = idx(idxq1(i+ns))
               ! Calculate the j-th eigenvector of the deflated system
@@ -837,7 +839,8 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               &(obj,tmp,nnzu,ddiff(j))
               ev(1:nnzu,i) = zu(1:nnzu) / tmp(1:nnzu) * ev_scale(j)
             enddo
-
+            !$omp end taskloop
+            
 !>>>>>>>>>> End of timing strip mining part_1        
             call obj%timer%stop("merge_systems_strip_mining_part_1" // PRECISION_SUFFIX)
             
