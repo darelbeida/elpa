@@ -822,14 +822,14 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
             !$omp taskloop num_tasks(50)
             do i = 1, ncnt
               qtmp2(1:l_rows,i) = q(l_rqs:l_rqe,l_col_out(idxq1(i+ns)))
-            enddo
-            !$omp end taskloop
+            !!enddo
+            !!!omp end taskloop
             
             ! Compute eigenvectors of the rank-1 modified matrix.
             ! Parts for multiplying with upper half of Q:
 
-            !$omp taskloop num_tasks(50)
-            do i = 1, ncnt
+            !!!omp taskloop num_tasks(50)
+            !!do i = 1, ncnt
               j = idx(idxq1(i+ns))
               ! Calculate the j-th eigenvector of the deflated system
               ! See above why we are doing it this way!
