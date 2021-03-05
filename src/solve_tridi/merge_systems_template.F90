@@ -55,6 +55,7 @@
 
 #include "../general/sanity.F90"
 #include "../general/error_checking.inc"
+#include "/mpcdf/soft/SLE_12/packages/skylake/scorep/intel_19.1.3-19.1.3-impi_2019.9-2019.9.304/6.0/include/scorep/SCOREP_User.inc"
 
     subroutine merge_systems_&
     &PRECISION &
@@ -135,6 +136,12 @@
       integer(kind=ik), intent(in)                :: max_threads
 #ifdef WITH_OPENMP_TRADITIONAL
       integer(kind=ik)                            :: my_thread
+      
+!Soheil
+      logical, parameter                          :: useTASK=.FALSE.
+
+!For Score-P tracing
+      SCOREP_USER_REGION_DEFINE('merge_trace')
 
       allocate(z_p(na,0:max_threads-1), stat=istat, errmsg=errorMessage)
       check_allocate("merge_systems: z_p",istat, errorMessage)
@@ -734,20 +741,19 @@
 
 !<<<<<<<<<< Timing LOOPS 13 & 14        
 call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX) 
-        ! Set (output) Q to 0, it will sum up new Q
-!$omp parallel shared(np_rem, nnzu, nnzl, ndef)
-!$omp do        
+        ! Set (output) Q to 0, it will sum up new Q       
         DO i = 1, na
           if(p_col_out(i)==my_pcol) q(l_rqs:l_rqe,l_col_out(i)) = 0
         enddo
-!$omp end do
 
         np_rem = my_pcol
+!$omp parallel
 !$omp single
         do np = 1, npc_n
-          ! Do a ring send of qtmp1
-           !$omp task shared(np_rem) depend(out:qtmp1, np_rem)
-          if (np>1) then
+           !SCOREP_USER_REGION_BEGIN('merge_trace', "merge_sm", SCOREP_USER_REGION_TYPE_LOOP)
+           ! Do a ring send of qtmp1
+           !!omp task shared(np_rem) depend(out:qtmp1, np_rem)
+           if (np>1) then
 
             if (np_rem==npc_0) then
               np_rem = npc_0+npc_n-1
@@ -763,7 +769,7 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
             call obj%timer%stop("mpi_communication")
 #endif /* WITH_MPI */
           endif
-          !$omp end task
+          !!omp end task
           
           if (useGPU) then
             successCUDA = cuda_memcpy(qtmp1_dev, int(loc(qtmp1(1,1)),kind=c_intptr_t), &
@@ -776,7 +782,7 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
 
           nnzu = 0
           nnzl = 0
-          !$omp task depend(in:np_rem)
+          !!omp task depend(in:np_rem)
           do i=1,na1
             if (p_col(idx1(i))==np_rem) then
               if (coltyp(idx1(i))==1 .or. coltyp(idx1(i))==2) then
@@ -791,12 +797,12 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               endif
             endif
           enddo
-          !$omp end task
+          !!omp end task
           
           ! Set the deflated eigenvectors in Q (comming from proc np_rem)
 
           ndef = MAX(nnzu,nnzl) ! Remote counter in input matrix
-          !$omp task firstprivate(ndef) depend(in:qtmp1)
+          !!omp task firstprivate(ndef) depend(in:qtmp1)
           do i = 1, na
             j = idx(i)
             if (j>na1) then
@@ -807,7 +813,7 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
               endif
             endif
           enddo
-          !$omp end task
+          !!omp end task
 
 !<<<<<<<<<< Timing Strip mining of LOOPS 13 & 14        
           call obj%timer%start("merge_systems_strip_mining" // PRECISION_SUFFIX)           
@@ -816,31 +822,63 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
 !<<<<<<<<<< Timing Strip mining part_1        
              call obj%timer%start("merge_systems_strip_mining_part_1" // PRECISION_SUFFIX)
              
-            ncnt = MIN(max_strip,nqcols1-ns) ! number of columns in this strip
+             ncnt = MIN(max_strip,nqcols1-ns) ! number of columns in this strip
 
-            ! Get partial result from (output) Q
-            !$omp taskloop num_tasks(50)
-            do i = 1, ncnt
-              qtmp2(1:l_rows,i) = q(l_rqs:l_rqe,l_col_out(idxq1(i+ns)))
-            !!enddo
-            !!!omp end taskloop
+             ! Get partial result from (output) Q
+             !$omp taskloop 
+             do i = 1, ncnt
+                qtmp2(1:l_rows,i) = q(l_rqs:l_rqe,l_col_out(idxq1(i+ns)))
+             enddo
+             !$omp end taskloop
             
             ! Compute eigenvectors of the rank-1 modified matrix.
-            ! Parts for multiplying with upper half of Q:
+            ! Parts for multiplying with upper half of Q:             
+             do i = 1, ncnt
+                !!omp task depend(out:j)
+                !!j = idx(idxq1(i+ns))
+                !!omp end task
+               
+                ! Calculate the j-th eigenvector of the deflated system
+                ! See above why we are doing it this way!
 
-            !!!omp taskloop num_tasks(50)
-            !!do i = 1, ncnt
-              j = idx(idxq1(i+ns))
-              ! Calculate the j-th eigenvector of the deflated system
-              ! See above why we are doing it this way!
-              tmp(1:nnzu) = d1u(1:nnzu)-dbase(j)
-              call v_add_s_&
-              &PRECISION&
-              &(obj,tmp,nnzu,ddiff(j))
-              ev(1:nnzu,i) = zu(1:nnzu) / tmp(1:nnzu) * ev_scale(j)
+                !$omp task shared(tmp) depend(out:tmp) if(useTASK)
+                tmp(1:nnzu) = d1u(1:nnzu)-dbase(idx(idxq1(i+ns))) !dbase(j)
+                !$omp end task
+
+                !$omp task shared(tmp) depend(inout:tmp) if(useTASK)               
+                call v_add_s_&
+                     &PRECISION&
+                     &(obj,tmp,nnzu,ddiff(idx(idxq1(i+ns))))!Equivalent to:tmp(1:nnzu) = tmp(1:nnzu) + ddiff(j) 
+                !$omp end task
+
+                !Alternative:
+                !$omp task shared(tmp) depend(inout:tmp)
+                !tmp(1:nnzu) = tmp(1:nnzu) + ddiff(idx(idxq1(i+ns))) !ddiff(j) 
+                !$omp end task
+
+               !$omp task shared(tmp) depend(in:tmp)
+               ev(1:nnzu,i) = zu(1:nnzu) / tmp(1:nnzu) * ev_scale(idx(idxq1(i+ns))) !ev_scale(j)               
+               !$omp end task
             enddo
-            !$omp end taskloop
-            
+            !$omp taskwait
+
+! !!! STUPID TEST
+!              do i = 1, ncnt               
+!                j = idx(idxq1(i+ns))
+                              
+!                ! Calculate the j-th eigenvector of the deflated system
+!                ! See above why we are doing it this way!
+               
+!                tmp(1:nnzu) = d1u(1:nnzu)-dbase(j)
+
+!                call v_add_s_&
+!                     &PRECISION&
+!                     &(obj,tmp,nnzu,ddiff(j))   ! Equivalent to: tmp(1:nnzu) = tmp(1:nnzu) + ddiff(j) 
+                              
+!                ev(1:nnzu,i) = zu(1:nnzu) / tmp(1:nnzu) * ev_scale(j)               
+!             enddo
+!!!END OF STUPID TEST
+
 !>>>>>>>>>> End of timing strip mining part_1        
             call obj%timer%stop("merge_systems_strip_mining_part_1" // PRECISION_SUFFIX)
             
@@ -887,15 +925,30 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
             ! Parts for multiplying with lower half of Q:
 
             do i = 1, ncnt
-              j = idx(idxq1(i+ns))
+              !!!!j = idx(idxq1(i+ns))
               ! Calculate the j-th eigenvector of the deflated system
               ! See above why we are doing it this way!
-              tmp(1:nnzl) = d1l(1:nnzl)-dbase(j)
-              call v_add_s_&
-              &PRECISION&
-              &(obj,tmp,nnzl,ddiff(j))
-              ev(1:nnzl,i) = zl(1:nnzl) / tmp(1:nnzl) * ev_scale(j)
+
+               !!!!$omp task shared(tmp) depend(out:tmp) if(useTASK)
+               tmp(1:nnzl) = d1l(1:nnzl)-dbase(idx(idxq1(i+ns)))
+               !!!!$omp end task
+               
+!!$omp task shared(tmp) depend(inout:tmp) if(useTASK)
+               call v_add_s_&
+               &PRECISION&
+               &(obj,tmp,nnzl,ddiff(idx(idxq1(i+ns))))
+!!!!omp end task
+              
+               !Alternative:
+               !!$omp task shared(tmp) depend(inout:tmp) if(useTASK)
+               !!tmp(1:nnzl) = tmp(1:nnzl) + ddiff(idx(idxq1(i+ns))) !ddiff(j) 
+               !!$omp end task
+
+               !!!!$omp task shared(tmp) depend(in:tmp) if(useTASK)
+               ev(1:nnzl,i) = zl(1:nnzl) / tmp(1:nnzl) * ev_scale(idx(idxq1(i+ns)))
+               !!!!$omp end task
             enddo
+            !!!!$omp taskwait
 
 !>>>>>>>>>> End of timing strip mining part_2
             call obj%timer%stop("merge_systems_strip_mining_part_2" // PRECISION_SUFFIX)
@@ -942,23 +995,26 @@ call obj%timer%start("merge_systems_loop13" // PRECISION_SUFFIX)
 !<<<<<<<<<< Timing Strip mining part_3        
             call obj%timer%start("merge_systems_strip_mining_part_3" // PRECISION_SUFFIX)
             
-             ! Put partial result into (output) Q
-
+            ! Put partial result into (output) Q
+            !$omp taskloop 
             do i = 1, ncnt
                q(l_rqs:l_rqe,l_col_out(idxq1(i+ns))) = qtmp2(1:l_rows,i)
             enddo
-           
+            !$omp end taskloop
+
 !>>>>>>>>>> End of timing strip mining part_3        
             call obj%timer%stop("merge_systems_strip_mining_part_3" // PRECISION_SUFFIX)
             
          enddo   !ns = 0, nqcols1-1, max_strip ! strimining loop
 !>>>>>>>>>> End timing Strip mining of LOOPS 13 & 14        
          call obj%timer%stop("merge_systems_strip_mining" // PRECISION_SUFFIX)           
-        enddo    !do np = 1, npc_n
-        !$omp end single
-        !$omp end parallel
+
+         SCOREP_USER_REGION_END('merge_trace')
+      enddo    !do np = 1, npc_n
+      !$omp end single
+      !$omp end parallel
         
-        call obj%timer%stop("merge_systems_loop13" // PRECISION_SUFFIX)         
+      call obj%timer%stop("merge_systems_loop13" // PRECISION_SUFFIX)         
 !>>>>>>>>>> End timing LOOP 13&14. Fraction of exec. time (own): ~10%
  
         if(useGPU) then
