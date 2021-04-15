@@ -81,6 +81,7 @@ module elpa_api
     integer(kind=c_int), public, pointer :: local_nrows => NULL()
     integer(kind=c_int), public, pointer :: local_ncols => NULL()
     integer(kind=c_int), public, pointer :: nblk => NULL()
+    integer(kind=c_int), public, pointer :: nr_of_gpus => NULL()
 
     contains
       ! general

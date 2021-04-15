@@ -233,6 +233,7 @@ module elpa_impl
       obj%local_nrows => obj%associate_int("local_nrows")
       obj%local_ncols => obj%associate_int("local_ncols")
       obj%nblk => obj%associate_int("nblk")
+      obj%nr_of_gpus => obj%associate_int("nr_of_gpus")
 
 #ifdef USE_FORTRAN2008
       if (present(error)) then

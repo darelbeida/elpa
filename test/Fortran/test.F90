@@ -276,6 +276,11 @@ program test
      print '(3(a,i0))','Number of processor rows=',np_rows,', cols=',np_cols,', total=',nprocs
      print '(a)',      'Process layout: ' // layout
 #endif
+#if TEST_GPU == 1
+     print '(a)',      'GPU usage: should be used in this test'
+#else
+     print '(a)',      'GPU usage: should not be used in this test'
+#endif
      print *,''
    endif
 
