@@ -143,7 +143,7 @@ static int nev_is_valid(elpa_index_t index, int n, int new_value);
 static int bw_is_valid(elpa_index_t index, int n, int new_value);
 static int output_build_config_is_valid(elpa_index_t index, int n, int new_value);
 static int gpu_is_valid(elpa_index_t index, int n, int new_value);
-static int nr_of_gpus_is_valid(elpa_index_t index, int n, int new_value);
+static int nr_of_gpus_per_node_is_valid(elpa_index_t index, int n, int new_value);
 static int verbose_is_valid(elpa_index_t index, int n, int new_value);
 static int skewsymmetric_is_valid(elpa_index_t index, int n, int new_value);
 
@@ -206,7 +206,7 @@ static const elpa_index_int_entry_t int_entries[] = {
         INT_PARAMETER_ENTRY("na", "Global matrix has size (na * na)", na_is_valid, PRINT_STRUCTURE),
         INT_PARAMETER_ENTRY("nev", "Number of eigenvectors to be computed, 0 <= nev <= na", nev_is_valid, PRINT_STRUCTURE),
         INT_PARAMETER_ENTRY("nblk", "Block size of scalapack block-cyclic distribution", is_positive, PRINT_STRUCTURE),
-        INT_PARAMETER_ENTRY("nr_of_gpus", "Number of GPUs used (cannot be set, only queried)", nr_of_gpus_is_valid, PRINT_STRUCTURE),
+        INT_PARAMETER_ENTRY("nr_of_gpus_per_node", "Number of GPUs per node used (cannot be set, only queried)", nr_of_gpus_per_node_is_valid, PRINT_STRUCTURE),
         INT_PARAMETER_ENTRY("local_nrows", "Number of matrix rows stored on this process", NULL, PRINT_NO),
         INT_PARAMETER_ENTRY("local_ncols", "Number of matrix columns stored on this process", NULL, PRINT_NO),
         INT_PARAMETER_ENTRY("process_row", "Process row number in the 2D domain decomposition", NULL, PRINT_NO),
@@ -914,7 +914,7 @@ static int gpu_is_valid(elpa_index_t index, int n, int new_value) {
         return new_value == 0 || new_value == 1;
 }
 
-static int nr_of_gpus_is_valid(elpa_index_t index, int n, int new_value) {
+static int nr_of_gpus_per_node_is_valid(elpa_index_t index, int n, int new_value) {
         int gpu_is_active = elpa_index_get_int_value(index, "gpu", NULL);
         if (gpu_is_active == 1) {
                 return ((new_value == 0 ) || (new_value == 1));

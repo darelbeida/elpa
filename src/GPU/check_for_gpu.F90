@@ -61,9 +61,10 @@ module mod_check_for_gpu
       logical, optional, intent(in) :: wantDebug
       logical                       :: success, wantDebugMessage
       integer(kind=ik), intent(out) :: numberOfDevices
-      integer(kind=ik)              :: deviceNumber, mpierr, maxNumberOfDevices
+      integer(kind=ik)              :: deviceNumber, maxNumberOfDevices, gpusPerNode
       logical                       :: gpuAvailable
       integer(kind=ik)              :: error, mpi_comm_all, use_gpu_id, min_use_gpu_id
+      integer(kind=MPI_KIND)        :: mpierr
       !character(len=1024)           :: envname
 
       if (.not.(present(wantDebug))) then
@@ -77,7 +78,7 @@ module mod_check_for_gpu
       endif
 
       gpuAvailable = .false.
-
+      numberOfDevices = -1
       call obj%get("mpi_comm_parent",mpi_comm_all,error)
       if (error .ne. ELPA_OK) then
         print *,"Problem getting option for mpi_comm_parent. Aborting..."
@@ -103,12 +104,12 @@ module mod_check_for_gpu
 #endif
         gpuAvailable = .true.
 
-        if (myid==0) then
-          if (wantDebugMessage) then
-            print *
-            print '(3(a,i0))','Found ', numberOfDevices, ' GPUs'
-          endif
-        endif
+        !if (myid==0) then
+        !  if (wantDebugMessage) then
+        !    print *
+        !    print '(3(a,i0))','Found ', numberOfDevices, ' GPUs'
+        !  endif
+        !endif
 
         success = .true.
 #ifdef WITH_NVIDIA_GPU_VERSION
@@ -130,6 +131,34 @@ module mod_check_for_gpu
           print '(3(a,i0))', 'MPI rank ', myid, ' uses GPU #', deviceNumber
         endif
  
+#ifdef WITH_NVIDIA_GPU_VERSION
+        ! call getenv("CUDA_PROXY_PIPE_DIRECTORY", envname)
+        success = cuda_getdevicecount(numberOfDevices)
+#endif
+#ifdef WITH_AMD_GPU_VERSION
+        ! call getenv("CUDA_PROXY_PIPE_DIRECTORY", envname)
+        success = hip_getdevicecount(numberOfDevices)
+#endif
+        if (.not.(success)) then
+#ifdef WITH_NVIDIA_GPU_VERSION
+          print *,"error in cuda_getdevicecount"
+#endif
+#ifdef WITH_AMD_GPU_VERSION
+          print *,"error in hip_getdevicecount"
+#endif
+          stop 1
+        endif
+#ifdef  WITH_INTEL_GPU_VERSION
+        gpuAvailable = .false.
+        numberOfDevices = -1
+
+        numberOfDevices = 1
+        print *,"Manually setting",numberOfDevices," of GPUs"
+        if (numberOfDevices .ge. 1) then
+          gpuAvailable = .true.
+        endif
+#endif
+
         success = .true.        
 #ifdef WITH_NVIDIA_GPU_VERSION
         success = cublas_create(cublasHandle)
@@ -147,7 +176,7 @@ module mod_check_for_gpu
           stop 1
         endif
 
-      else
+      else ! (obj%is_set("use_gpu_id") == 1) then
 
 #if defined(WITH_NVIDIA_GPU_VERSION) || !defined(WITH_AMD_GPU_VERSION)
         if (cublasHandle .ne. -1) then
@@ -156,7 +185,6 @@ module mod_check_for_gpu
         if (rocblasHandle .ne. -1) then
 #endif
           gpuAvailable = .true.
-          numberOfDevices = -1
           if (myid == 0 .and. wantDebugMessage) then
             print *, "Skipping GPU init, should have already been initialized "
           endif
@@ -180,20 +208,20 @@ module mod_check_for_gpu
 #ifdef WITH_NVIDIA_GPU_VERSION
           print *,"error in cuda_getdevicecount"
 #endif
-#ifdef WITH_AMPD_GPU_VERSION
+#ifdef WITH_AMD_GPU_VERSION
           print *,"error in hip_getdevicecount"
 #endif
           stop 1
         endif
 #ifdef  WITH_INTEL_GPU_VERSION
-      gpuAvailable = .false.
-      numberOfDevices = -1
+        gpuAvailable = .false.
+        numberOfDevices = -1
 
-      numberOfDevices = 1
-      print *,"Manually setting",numberOfDevices," of GPUs"
-      if (numberOfDevices .ge. 1) then
-        gpuAvailable = .true.
-      endif
+        numberOfDevices = 1
+        print *,"Manually setting",numberOfDevices," of GPUs"
+        if (numberOfDevices .ge. 1) then
+          gpuAvailable = .true.
+        endif
 #endif
         ! make sure that all nodes have the same number of GPU's, otherwise
         ! we run into loadbalancing trouble
@@ -255,8 +283,18 @@ module mod_check_for_gpu
             stop 1
           endif
           
-        endif
+        endif ! nrOfDevices = 0
+      endif ! (obj%is_set("use_gpu_id") == 1) then  
+      if (numberOfDevices .ne. -1) then
+        gpusPerNode = numberOfDevices
+        call mpi_bcast(int(gpusPerNode,kind=MPI_KIND), 1_MPI_KIND, MPI_INTEGER , 0_MPI_KIND, int(mpi_comm_all,kind=MPI_KIND), &
+                       mpierr)
 
-      endif  
+        call obj%set("nr_of_gpus_per_node",gpusPerNode,error)
+        if (error .ne. ELPA_OK) then
+          print *,"Problem getting option for mpi_comm_parent. Aborting..."
+          stop
+        endif
+      endif
     end function
 end module
