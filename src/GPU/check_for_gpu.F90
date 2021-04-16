@@ -287,9 +287,10 @@ module mod_check_for_gpu
       endif ! (obj%is_set("use_gpu_id") == 1) then  
       if (numberOfDevices .ne. -1) then
         gpusPerNode = numberOfDevices
+#ifdef WITH_MPI
         call mpi_bcast(int(gpusPerNode,kind=MPI_KIND), 1_MPI_KIND, MPI_INTEGER , 0_MPI_KIND, int(mpi_comm_all,kind=MPI_KIND), &
                        mpierr)
-
+#endif
         call obj%set("nr_of_gpus_per_node",gpusPerNode,error)
         if (error .ne. ELPA_OK) then
           print *,"Problem getting option for mpi_comm_parent. Aborting..."
