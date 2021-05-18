@@ -187,6 +187,15 @@ subroutine tridiag_&
                                                                       &PRECISION&
                                                                       &_&
                                                                       &MATH_DATATYPE
+  !Soheil:
+  integer                                       :: pcols, lpcols, lprows   ! loop counter
+  integer                                       :: glob_rank   ! global MPI rank in MPI_COMM_WORLD
+  logical, parameter                            :: test_io = .false.
+#ifdef WITH_MPI  
+  call MPI_COMM_RANK(MPI_COMM_WORLD, glob_rank, mpierr)  
+#endif
+  !End Soheil
+  
   call obj%get("is_skewsymmetric",skewsymmetric,istat)
   if (istat .ne. ELPA_OK) then
        print *,"Problem getting option for skewsymmetric settings. Aborting..."
@@ -402,6 +411,25 @@ subroutine tridiag_&
   l_rows = local_index(na, my_prow, np_rows, nblk, -1) ! Local rows of a_mat
   l_cols = local_index(na, my_pcol, np_cols, nblk, -1) ! Local cols of a_mat
 
+  !Soheil:
+  ! if (glob_rank == 3) then
+  !    print '("I am ", i2.1, " All a_mat: ")', glob_rank
+  !    print *, a_mat(1:12, 1:12)    !'(f6.3)'
+  !    print '("a_mat(1,1): ", f6.3, " a_mat(2,1): ", f6.3, " a_mat(3,1): ", f6.3)',a_mat(1,1),a_mat(2,1),a_mat(3,1)
+  !    print '("a_mat(1,2): ", f6.3, " a_mat(2,2): ", f6.3, " a_mat(3,2): ", f6.3)',a_mat(1,2),a_mat(2,2),a_mat(3,2)
+  !    print '("a_mat(1,3): ", f6.3, " a_mat(2,3): ", f6.3, " a_mat(3,3): ", f6.3)',a_mat(1,3),a_mat(2,3),a_mat(3,3)
+  ! end if
+  
+! #ifdef DOUBLE_PRECISION_REAL
+!   do pcols = 0, 3
+!      if (glob_rank == pcols) then
+!         print '("I am ", i2.1, " My a_mat: ")', glob_rank
+!         print *, a_mat(1:l_rows, 1:l_cols)    !'(f6.3)'
+!      end if
+!      call MPI_Barrier(mpi_comm_world, mpierr)
+!   end do
+! #endif
+  !End Soheil
   if (my_prow == prow(na, nblk, np_rows) .and. my_pcol == pcol(na, nblk, np_cols)) &
 #if COMPLEXCASE == 1
   d_vec(na) = real(a_mat(l_rows,l_cols), kind=rk)
@@ -427,12 +455,34 @@ subroutine tridiag_&
     check_memcpy_cuda("tridiag: a_dev", successCUDA)
   endif
 
+  !Soheil
+  !print '(" np_rows: ", i2.1, " nblk: ", i2.1, " np_cols: ", i2.1)', np_rows, nblk, np_cols
+  if (test_io) then
+     do pcols = 0, 3
+        if (glob_rank == pcols) then     
+           !print *, a_mat(1:matrixRows, 1:matrixCols)
+           do lpcols=1,matrixCols
+              print '("In TRIDIAG, I am prow: ", i2.1, ", pcol: ", i2.1, ", printing col.: ", i2.1, ", My a_frank: ", /)', my_prow, my_pcol, lpcols
+              do lprows=1,matrixRows
+                 print '(f6.3)', a_mat(lprows, lpcols)    !'(f6.3)'
+              end do
+           end do
+        end if
+        call MPI_Barrier(mpi_comm_world, mpierr)
+     end do
+  end if
+  
+  
+  
   ! main cycle of tridiagonalization
-  ! in each step, 1 Householder Vector is calculated
+  ! in each step, 1 Householder Vector is calculated      
   do istep = na, nblockEnd ,-1
 
-    ! Calculate number of local rows and columns of the still remaining matrix
-    ! on the local processor
+     !Soheil
+     !print *,'pcol(',istep, nblk, np_cols,') = ', pcol(istep, nblk, np_cols)
+     
+     ! Calculate number of local rows and columns of the still remaining matrix
+     ! on the local processor
     l_rows = local_index(istep-1, my_prow, np_rows, nblk, -1)
     l_cols = local_index(istep-1, my_pcol, np_cols, nblk, -1)
 
@@ -457,6 +507,22 @@ subroutine tridiag_&
         v_row(1:l_rows) = a_mat(1:l_rows,l_cols+1)
       endif
 
+      !Soheil: print out v_row before calling BLAS  
+      if (test_io) then
+         print '("I am prow: ", i2.1, ", pcol: ", i2.1, " this is iteration ", i3.1, ", l_rows: ", i2.1, ", l_cols: ", i2.1, " My v_row bef. dgemm: ")', my_prow, my_pcol, istep, l_rows, l_cols
+         print '(f6.3)', v_row(1:l_rows)
+      end if
+      ! !print '("in the BLAS call, ubound(vu_rows, dim=1)= ", i3.1)', int(ubound(vu_stored_rows,dim=1))
+      ! print '("l_cols+1= ", i3.1, ", vu_rows before BLAS: ")', l_cols+1
+      ! print *, vu_stored_rows
+      ! print *, "uv_cols= "
+      ! print *, uv_stored_cols
+      ! !print '("in the BLAS call, ubound(uv_rows, dim=1)= ", i3.1)', int(ubound(uv_stored_cols,dim=1))
+      ! !end if
+      ! !call MPI_Barrier(mpi_comm_cols, mpierr)   !mpi_comm_cols
+      
+      !Soheil: The following GEMV call computes [v u][u v]**T.
+      ! v_row := VU*UV + v_row
       if (n_stored_vecs > 0 .and. l_rows > 0) then
         if (wantDebug) call obj%timer%start("blas")
 #if COMPLEXCASE == 1
@@ -475,8 +541,17 @@ subroutine tridiag_&
                             ONE, v_row, 1_BLAS_KIND)
         if (wantDebug) call obj%timer%stop("blas")
 
-      endif
+     endif
 
+      !Soheil: print out v_row after calling BLAS  
+      ! !if (my_pcol == pcols) then
+      ! print '("I am ", i2.1, " this is iteration ", i3.1, " My v_row aft. dgemm: ")', my_pcol, istep            
+      ! print '(f6.3)', v_row  
+      ! !end if
+
+      !Soheil: Compute the scaling factor
+      !step 1: compute the norm2(v_row)
+      !step 1a: compute the local inner product <v_row, v_row> corresponding to ||v_row||^2 where v_row is a HH vector
       if (my_prow == prow(istep-1, nblk, np_rows)) then
         aux1(1) = dot_product(v_row(1:l_rows-1),v_row(1:l_rows-1))
         aux1(2) = v_row(l_rows)
@@ -485,6 +560,7 @@ subroutine tridiag_&
         aux1(2) = 0.
       endif
 
+      !step 1b: perform an allreduce to sum up the partial sums from all process-rows
 #ifdef WITH_MPI
       if (wantDebug) call obj%timer%start("mpi_communication")
       call mpi_allreduce(aux1, aux2, 2_MPI_KIND, MPI_MATH_DATATYPE_PRECISION, &
@@ -500,8 +576,10 @@ subroutine tridiag_&
 #if COMPLEXCASE == 1
       vnorm2 = real(aux2(1),kind=rk)
 #endif
+      !Soheil: vnorm2 is obtained. end of step 1. 
       vrl    = aux2(2)
 
+      !Soheil: step 2: specify the HH transf. using vrl and vnorm2. On exit, xf and tau(istep) are computed and set.
       ! Householder transformation
 #if REALCASE == 1
       call hh_transform_real_&
@@ -531,8 +609,12 @@ subroutine tridiag_&
 
       ! add tau after the end of actuall v_row, to be broadcasted with it
       v_row(l_rows+1) = tau(istep)
-    endif !(my_pcol == pcol(istep, nblk, np_cols))
-
+   endif !(my_pcol == pcol(istep, nblk, np_cols))
+   !Soheil: Add the following MPI_Barrier for ordered I/O in the test runs. TODO: remove for production!
+#ifdef WITH_MPI   
+   call MPI_Barrier(mpi_comm_cols, mpierr)
+#endif /* WITH_MPI */
+   
 !          SAVE_MATR("HH vec stored", na - istep + 1)
 
 #ifdef WITH_MPI
@@ -554,7 +636,7 @@ subroutine tridiag_&
               (obj, v_row, ubound(v_row,dim=1), mpi_comm_rows, v_col, ubound(v_col,dim=1), mpi_comm_cols, &
                1, istep-1, 1, nblk, max_threads)
 
-    ! Calculate u = (A + VU**T + UV**T)*v
+!========== Calculate u = (A + VU**T + UV**T)*v ==========
 
     ! For cache efficiency, we use only the upper half of the matrix tiles for this,
     ! thus the result is partly in u_col(:) and partly in u_row(:)
@@ -562,22 +644,22 @@ subroutine tridiag_&
     u_col(1:l_cols) = 0
     u_row(1:l_rows) = 0
     if (l_rows > 0 .and. l_cols> 0 ) then
-     if (useGPU) then
-       successCUDA = cuda_memset(u_col_dev, 0, l_cols * size_of_datatype)
-       check_memcpy_cuda("tridiag: u_col_dev", successCUDA)
+       if (useGPU) then
+          successCUDA = cuda_memset(u_col_dev, 0, l_cols * size_of_datatype)
+          check_memcpy_cuda("tridiag: u_col_dev", successCUDA)
 
-       successCUDA = cuda_memset(u_row_dev, 0, l_rows * size_of_datatype)
-       check_memcpy_cuda("tridiag: u_row_dev", successCUDA)
+          successCUDA = cuda_memset(u_row_dev, 0, l_rows * size_of_datatype)
+          check_memcpy_cuda("tridiag: u_row_dev", successCUDA)
 
-       successCUDA = cuda_memcpy(v_col_dev, int(loc(v_col(1)),kind=c_intptr_t), &
-                     l_cols * size_of_datatype, cudaMemcpyHostToDevice)
+          successCUDA = cuda_memcpy(v_col_dev, int(loc(v_col(1)),kind=c_intptr_t), &
+               l_cols * size_of_datatype, cudaMemcpyHostToDevice)
 
-       check_memcpy_cuda("tridiag: v_col_dev", successCUDA)
+          check_memcpy_cuda("tridiag: v_col_dev", successCUDA)
 
-       successCUDA = cuda_memcpy(v_row_dev, int(loc(v_row(1)),kind=c_intptr_t), &
+          successCUDA = cuda_memcpy(v_row_dev, int(loc(v_row(1)),kind=c_intptr_t), &
                                  l_rows * size_of_datatype, cudaMemcpyHostToDevice)
-       check_memcpy_cuda("tridiag: v_row_dev", successCUDA)
-     endif ! useGU
+          check_memcpy_cuda("tridiag: v_row_dev", successCUDA)
+       endif ! useGU
 
 #ifdef WITH_OPENMP_TRADITIONAL
      call obj%timer%start("OpenMP parallel")
@@ -637,7 +719,7 @@ subroutine tridiag_&
              endif
            endif
            if (wantDebug) call obj%timer%stop("blas")
-         endif
+        endif
          n_iter = n_iter+1
 #else /* WITH_OPENMP_TRADITIONAL */
 
@@ -761,7 +843,7 @@ subroutine tridiag_&
 #endif /* WITH_OPENMP_TRADITIONAL */
 
          ! second calculate (VU**T + UV**T)*v part of (A + VU**T + UV**T)*v
-         if (n_stored_vecs > 0) then
+         if (n_stored_vecs > 0) then   !Soheil: if this is the first iteration, we have not yet stored any UV or VU
            if (wantDebug) call obj%timer%start("blas")
 #if REALCASE == 1
            call PRECISION_GEMV('T',     &
@@ -772,14 +854,17 @@ subroutine tridiag_&
                                int(l_rows,kind=BLAS_KIND), int(2*n_stored_vecs,kind=BLAS_KIND),   &
                                ONE, vu_stored_rows, int(ubound(vu_stored_rows,dim=1),kind=BLAS_KIND),   &
                                v_row,  1_BLAS_KIND, ZERO, aux, 1_BLAS_KIND)
-
+!Soheil: the above call sets: aux = VU**T * v_row
            call PRECISION_GEMV('N', int(l_cols,kind=BLAS_KIND), int(2*n_stored_vecs,kind=BLAS_KIND),   &
                                ONE, uv_stored_cols, int(ubound(uv_stored_cols,dim=1),kind=BLAS_KIND),   &
                                aux, 1_BLAS_KIND, ONE, u_col,  1_BLAS_KIND)
+!Soheil: the above call sets: u_col = u_col + UV * aux
            if (wantDebug) call obj%timer%stop("blas")
-         endif
+        endif
 
-       endif  ! (l_rows>0 .and. l_cols>0)
+      endif  ! (l_rows>0 .and. l_cols>0)
+      !Soheil: at this point, all MPI processes have computed thier share of u = Av. Notice that there are no
+      ! msg. passing involved in the whole previous if-block whatsoever. 
 
        ! Sum up all u_row(:) parts along rows and add them to the u_col(:) parts
        ! on the processors containing the diagonal
@@ -843,7 +928,8 @@ subroutine tridiag_&
 
        ! store u and v in the matrices U and V
        ! these matrices are stored combined in one here
-
+       !Soheil: the following stores the [u v] and the [v u] matrices acc. to Eq(5) in
+       !C. Penke et al. Parallel Computing 96 (2020) 102639
        do j=1,l_rows
 #if REALCASE == 1
          vu_stored_rows(j,2*n_stored_vecs+1) = tau(istep)*v_row(j)
@@ -920,7 +1006,7 @@ subroutine tridiag_&
                                   ONE, a_mat(l_row_beg,l_col_beg), int(matrixRows,kind=BLAS_KIND))
              if (wantDebug) call obj%timer%stop("blas")
            endif !useGPU
-         enddo
+        enddo
 
          if (useGPU) then
            if (mat_vec_as_one_block) then
@@ -936,7 +1022,7 @@ subroutine tridiag_&
          endif
 
          n_stored_vecs = 0
-       endif
+      endif
 
        if (my_prow == prow(istep-1, nblk, np_rows) .and. my_pcol == pcol(istep-1, nblk, np_cols)) then
          if (useGPU) then
@@ -972,9 +1058,9 @@ subroutine tridiag_&
                                      int(1 * size_of_datatype, kind=c_intptr_t), cudaMemcpyHostToDevice)
            check_memcpy_cuda("tridiag: a_dev 4", successCUDA)
          endif
-       endif
+      endif
 
-     enddo ! main cycle over istep=na,3,-1
+   enddo ! main cycle over istep=na,3,-1
 
 #if COMPLEXCASE == 1
      ! Store e_vec(1) and d_vec(1)
