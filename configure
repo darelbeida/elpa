@@ -6235,7 +6235,7 @@ else
 fi
 
 # Ensure trailing whitespace is preserved in a Makefile.
-ac_empty=""
+ac_empty="-I"
 
 
 # Make sure we can run config.sub.
