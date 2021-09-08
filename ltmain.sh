@@ -7054,11 +7054,6 @@ func_mode_link ()
 	continue
 	;;
 
-      -module)
-	module=yes
-	continue
-	;;
-
       # Tru64 UNIX uses -model [arg] to determine the layout of C++
       # classes, name mangling, and exception handling.
       # Darwin uses the -arch flag to determine output architecture.
